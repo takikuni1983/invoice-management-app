@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
-  const labels = await prisma.customFieldLabel.findMany({ orderBy: { sortOrder: 'asc' } });
-  return NextResponse.json(labels);
+  try {
+    const labels = await prisma.customFieldLabel.findMany({ orderBy: { sortOrder: 'asc' } });
+    return NextResponse.json(labels);
+  } catch {
+    return NextResponse.json([]);
+  }
 }
 
 export async function POST(req: NextRequest) {

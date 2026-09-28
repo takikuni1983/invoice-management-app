@@ -50,9 +50,12 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
   const [fieldLabels, setFieldLabels] = useState<string[]>([]);
 
   const loadFieldLabels = useCallback(async () => {
-    const res = await fetch('/api/settings/fields');
-    const data = await res.json();
-    if (Array.isArray(data)) setFieldLabels(data.map((d: any) => d.label));
+    try {
+      const res = await fetch('/api/settings/fields');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) setFieldLabels(data.map((d: any) => d.label));
+    } catch {}
   }, []);
 
   useEffect(() => { loadFieldLabels(); }, [loadFieldLabels]);
