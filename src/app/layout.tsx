@@ -13,9 +13,12 @@ const inter = localFont({
   display: 'swap',
 });
 
-const ipaGothic = localFont({
-  src: '../../public/fonts/IPAPGothic.ttf',
-  variable: '--font-ipa',
+const zenKaku = localFont({
+  src: [
+    { path: '../../public/fonts/ZenKakuGothicNew-Regular.ttf', weight: '400' },
+    { path: '../../public/fonts/ZenKakuGothicNew-Bold.ttf', weight: '700' },
+  ],
+  variable: '--font-zen',
   display: 'swap',
 });
 
@@ -31,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${inter.variable} ${ipaGothic.variable} font-sans antialiased bg-gray-50`}>
+      <body className={`${inter.variable} ${zenKaku.variable} font-sans antialiased bg-gray-50`}>
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0">

@@ -8,80 +8,85 @@ import { format, parseISO } from 'date-fns';
 import { Estimate } from '@/types';
 
 // ── フォント登録 ─────────────────────────────────────────────
-const _zenReg = fs.readFileSync(path.join(process.cwd(), 'public/fonts/ZenKakuGothicNew-Regular.ttf'));
+const _zenReg  = fs.readFileSync(path.join(process.cwd(), 'public/fonts/ZenKakuGothicNew-Regular.ttf'));
 const _zenBold = fs.readFileSync(path.join(process.cwd(), 'public/fonts/ZenKakuGothicNew-Bold.ttf'));
-const _inter = fs.readFileSync(path.join(process.cwd(), 'public/fonts/InterVariable.ttf'));
+const _inter   = fs.readFileSync(path.join(process.cwd(), 'public/fonts/InterVariable.ttf'));
 
 Font.register({
   family: 'ZenKaku',
   fonts: [
-    { src: `data:font/truetype;base64,${_zenReg.toString('base64')}`, fontWeight: 'normal' },
+    { src: `data:font/truetype;base64,${_zenReg.toString('base64')}`,  fontWeight: 'normal' },
     { src: `data:font/truetype;base64,${_zenBold.toString('base64')}`, fontWeight: 'bold' },
   ],
 });
 Font.register({ family: 'Inter', src: `data:font/truetype;base64,${_inter.toString('base64')}` });
 
-// ── カラー ───────────────────────────────────────────────────
+// ── カラー（仕様準拠） ────────────────────────────────────────
 const C = {
-  black:     '#111827',
-  dark:      '#1F2937',
-  mid:       '#4B5563',   // テーブルヘッダー・総額行背景
-  gray:      '#6B7280',   // サブテキスト
-  lightGray: '#D1D5DB',   // ボーダー
-  veryLight: '#F9FAFB',   // 行交互背景
-  white:     '#FFFFFF',
+  base:       '#000000',   // 基本フォントカラー
+  title:      '#817D7D',   // タイトル・見出しカラー
+  mid:        '#3c3d3a',   // 表ヘッダー背景
+  gray:       '#727272',   // 注釈・サブテキスト
+  border:     '#e3e3e3',   // 表の罫線
+  veryLight:  '#F9FAFB',   // 交互行背景
+  white:      '#FFFFFF',
 };
 
 // ── スタイル ─────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
     fontFamily: 'ZenKaku',
-    fontSize: 8.5,
+    fontSize: 8,
     paddingTop: 36,
     paddingHorizontal: 40,
-    paddingBottom: 40,
-    color: C.black,
+    paddingBottom: 44,
+    color: C.base,
     backgroundColor: C.white,
-    lineHeight: 1.5,
+    lineHeight: 1.6,
   },
 
   // 右上: 見積番号・日付
   topRight: { position: 'absolute', top: 36, right: 40, textAlign: 'right' },
-  docNumber: { fontFamily: 'Inter', fontSize: 9, fontWeight: 'bold', color: C.black, letterSpacing: 0.3 },
-  docDate: { fontFamily: 'Inter', fontSize: 7.5, color: C.gray, marginTop: 2 },
+  docNumber: { fontFamily: 'Inter', fontSize: 9, fontWeight: 'bold', color: C.base },
+  docDate:   { fontFamily: 'Inter', fontSize: 7.5, color: C.gray, marginTop: 2 },
 
   // タイトル
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: C.dark,
-    marginTop: 6,
-    marginBottom: 20,
+    color: C.title,
+    marginTop: 4,
+    marginBottom: 18,
   },
 
   // ヘッダー 2カラム
-  headerRow: { flexDirection: 'row', marginBottom: 20 },
-  headerLeft: { flex: 1, paddingRight: 20 },
-  headerRight: { width: 210 },
+  headerRow:   { flexDirection: 'row', marginBottom: 18 },
+  headerLeft:  { flex: 1, paddingRight: 20 },
+  headerRight: { width: 200 },
 
   // 送付先
-  toLabel: { fontSize: 7, color: C.gray, marginBottom: 4 },
-  toCompany: { fontSize: 13, fontWeight: 'bold', color: C.black, marginBottom: 12 },
+  toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
+  toCompany: { fontSize: 13, fontWeight: 'bold', color: C.base, marginBottom: 10 },
+
+  // 件名（送付先直下）
+  subjectRow:   { flexDirection: 'row', marginBottom: 3 },
+  subjectLabel: { fontSize: 7.5, color: C.title },
+  subjectValue: { fontSize: 7.5, color: C.base, marginLeft: 4 },
 
   // カスタムフィールド行
-  cfRow: { flexDirection: 'row', marginBottom: 6 },
-  cfLabel: { width: 60, fontSize: 8, color: C.gray, lineHeight: 1.6 },
-  cfColon: { width: 12, fontSize: 8, color: C.gray, lineHeight: 1.6 },
-  cfValue: { flex: 1, fontSize: 8, fontWeight: 'bold', color: C.black, lineHeight: 1.6 },
+  cfRow:   { flexDirection: 'row', marginBottom: 5 },
+  cfLabel: { width: 56, fontSize: 8, color: C.title, lineHeight: 1.6 },
+  cfColon: { width: 10, fontSize: 8, color: C.title, lineHeight: 1.6 },
+  cfValue: { flex: 1, fontSize: 8, fontWeight: 'bold', color: C.base, lineHeight: 1.6 },
 
   // 自社情報
-  companyName: { fontSize: 9.5, fontWeight: 'bold', color: C.black, marginBottom: 4 },
+  companyName: { fontSize: 9.5, fontWeight: 'bold', color: C.base, marginBottom: 4 },
   companyLine: { fontSize: 7.5, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
 
-  // 印鑑枠
-  stampArea: { flexDirection: 'row', marginTop: 12, height: 48 },
-  stampBox: { flex: 1, border: '0.75px solid #9CA3AF' },
+  // 印鑑枠 3マス
+  stampArea: { flexDirection: 'row', marginTop: 10, height: 46 },
+  stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
 
   // 総額バー
   totalBar: {
@@ -90,31 +95,32 @@ const s = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1.5,
     borderBottomWidth: 1.5,
-    borderColor: C.mid,
-    paddingVertical: 8,
-    marginBottom: 24,
+    borderColor: '#9CA3AF',
+    paddingVertical: 7,
+    marginBottom: 22,
   },
   totalBarLabel: { fontSize: 10, color: C.gray },
-  totalBarValue: { fontFamily: 'Inter', fontSize: 15, fontWeight: 'bold', color: C.black },
+  totalBarValue: { fontFamily: 'Inter', fontSize: 15, fontWeight: 'bold', color: C.base },
 
   // 明細テーブル
-  table: { marginBottom: 2 },
   tableHead: {
     flexDirection: 'row',
     backgroundColor: C.mid,
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 6,
   },
-  tableHeadText: { color: C.white, fontSize: 7.5, fontWeight: 'bold' },
+  tableHeadText: { color: C.white, fontSize: 9, fontWeight: 'bold' },
+
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 0.5,
-    borderColor: C.lightGray,
+    borderColor: C.border,
     paddingVertical: 9,
     paddingHorizontal: 6,
   },
   tableRowAlt: { backgroundColor: C.veryLight },
-  itemName: { fontSize: 8, fontWeight: 'bold', color: C.black, marginBottom: 3 },
+
+  itemName:   { fontSize: 8, fontWeight: 'bold', color: C.base, marginBottom: 3 },
   itemDetail: { fontSize: 7, color: C.gray, lineHeight: 1.6 },
 
   // 列幅（単位列なし）
@@ -126,20 +132,14 @@ const s = StyleSheet.create({
 
   // 集計
   totalsArea: { alignItems: 'flex-end', marginTop: 6 },
-  totalLine: { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 3.5 },
+  totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 3.5 },
   totalLineLabel: {
-    width: 110,
-    textAlign: 'right',
-    paddingRight: 12,
-    color: C.gray,
-    fontSize: 8,
+    width: 110, textAlign: 'right', paddingRight: 12,
+    color: C.gray, fontSize: 8,
   },
   totalLineValue: {
-    fontFamily: 'Inter',
-    width: 80,
-    textAlign: 'right',
-    fontSize: 8,
-    color: C.black,
+    fontFamily: 'Inter', width: 80, textAlign: 'right',
+    fontSize: 8, color: C.base,
   },
   grandTotalRow: {
     flexDirection: 'row',
@@ -150,34 +150,23 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   grandLabel: {
-    width: 110,
-    textAlign: 'right',
-    paddingRight: 12,
-    color: C.white,
-    fontSize: 9,
-    fontWeight: 'bold',
+    width: 110, textAlign: 'right', paddingRight: 12,
+    color: C.white, fontSize: 9, fontWeight: 'bold',
   },
   grandValue: {
-    fontFamily: 'Inter',
-    width: 80,
-    textAlign: 'right',
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: C.white,
+    fontFamily: 'Inter', width: 80, textAlign: 'right',
+    fontSize: 9, fontWeight: 'bold', color: C.white,
   },
 
   // 備考・取引条件
-  section: { marginTop: 16 },
+  section:      { marginTop: 16 },
   sectionLabel: {
-    fontSize: 7,
-    color: C.gray,
-    borderBottomWidth: 0.5,
-    borderColor: C.lightGray,
-    paddingBottom: 3,
-    marginBottom: 5,
+    fontSize: 7, color: C.title,
+    borderBottomWidth: 0.5, borderColor: C.border,
+    paddingBottom: 3, marginBottom: 5,
   },
-  noteText: { fontSize: 7.5, color: C.black, lineHeight: 1.7 },
-  noteBox: { backgroundColor: C.veryLight, padding: 7, borderRadius: 2 },
+  noteBox:  { backgroundColor: C.veryLight, padding: 7, borderRadius: 2 },
+  noteText: { fontSize: 7.5, color: C.base, lineHeight: 1.7 },
 });
 
 // ── ユーティリティ ───────────────────────────────────────────
@@ -198,12 +187,9 @@ interface Props {
     customFields?: { label: string; value: string }[];
   };
   companyInfo?: {
-    companyName: string;
-    ownerName?: string | null;
-    postalCode?: string | null;
-    address?: string | null;
-    phone?: string | null;
-    registrationNumber?: string | null;
+    companyName: string; ownerName?: string | null;
+    postalCode?: string | null; address?: string | null;
+    phone?: string | null; registrationNumber?: string | null;
   };
 }
 
@@ -217,10 +203,9 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
     taxByRate[rate] = (taxByRate[rate] ?? 0) + Math.round(i.amount * rate / 100);
   });
   const taxAmount = Object.values(taxByRate).reduce((a, b) => a + b, 0);
-  const discount = estimate.discount ?? 0;
-  const total = subtotal + taxAmount - discount;
+  const discount  = estimate.discount ?? 0;
+  const total     = subtotal + taxAmount - discount;
 
-  // 税率ラベル: 単一税率の場合は "消費税 (10%)" 複数の場合は "消費税"
   const taxRates = Object.keys(taxByRate).map(Number).filter(r => r > 0);
   const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
 
@@ -240,10 +225,18 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
         {/* ヘッダー 2カラム */}
         <View style={s.headerRow}>
 
-          {/* 左: 送付先 + カスタムフィールド */}
+          {/* 左: 送付先 + 件名 + カスタムフィールド */}
           <View style={s.headerLeft}>
             <Text style={s.toLabel}>送付先</Text>
             <Text style={s.toCompany}>{customer?.companyName} 御中</Text>
+
+            {estimate.subject ? (
+              <View style={[s.cfRow, { marginBottom: 8 }]}>
+                <Text style={s.cfLabel}>件名</Text>
+                <Text style={s.cfColon}> :</Text>
+                <Text style={s.cfValue}> {estimate.subject}</Text>
+              </View>
+            ) : null}
 
             {customFields.map((cf, i) => (
               <View key={i} style={s.cfRow}>
@@ -254,7 +247,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
             ))}
           </View>
 
-          {/* 右: 自社情報 + 印鑑 */}
+          {/* 右: 自社情報 + 印鑑枠 */}
           <View style={s.headerRight}>
             {companyInfo?.companyName ? (
               <>
@@ -275,8 +268,6 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
                 )}
               </>
             ) : null}
-
-            {/* 印鑑枠 3マス */}
             <View style={s.stampArea}>
               <View style={s.stampBox} />
               <View style={s.stampBox} />
@@ -292,7 +283,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
         </View>
 
         {/* 明細テーブル */}
-        <View style={s.table}>
+        <View>
           <View style={s.tableHead}>
             <Text style={[s.tableHeadText, s.colDesc]}>項目 &amp; 詳細</Text>
             <Text style={[s.tableHeadText, s.colQty]}>数量</Text>
@@ -309,12 +300,12 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
                   <Text style={s.itemDetail}>{(item as any).details}</Text>
                 ) : null}
               </View>
-              <Text style={[{ fontFamily: 'Inter', fontSize: 8 }, s.colQty]}>{item.quantity}</Text>
-              <Text style={[{ fontFamily: 'Inter', fontSize: 8 }, s.colPrice]}>{fmtNum(item.unitPrice)}</Text>
-              <Text style={[{ fontFamily: 'Inter', fontSize: 8, color: C.gray }, s.colTax]}>
+              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{item.quantity}</Text>
+              <Text style={[s.colPrice, { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.unitPrice)}</Text>
+              <Text style={[s.colTax,   { fontFamily: 'Inter', fontSize: 8, color: C.gray }]}>
                 {(item.taxRate ?? 10) === 0 ? '-' : `${item.taxRate ?? 10}`}
               </Text>
-              <Text style={[{ fontFamily: 'Inter', fontSize: 8 }, s.colAmt]}>{fmtNum(item.amount)}</Text>
+              <Text style={[s.colAmt,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.amount)}</Text>
             </View>
           ))}
         </View>

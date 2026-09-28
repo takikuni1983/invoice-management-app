@@ -48,6 +48,7 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
     estimate?.customFields?.map(cf => ({ label: cf.label, value: cf.value })) ?? []
   );
   const [fieldLabels, setFieldLabels] = useState<string[]>([]);
+  const [masterItems, setMasterItems] = useState<string[]>([]);
 
   const loadFieldLabels = useCallback(async () => {
     try {
@@ -58,7 +59,19 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
     } catch {}
   }, []);
 
-  useEffect(() => { loadFieldLabels(); }, [loadFieldLabels]);
+  const loadMasterItems = useCallback(async () => {
+    try {
+      const res = await fetch('/api/items');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) setMasterItems(data.map((d: any) => d.name));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    loadFieldLabels();
+    loadMasterItems();
+  }, [loadFieldLabels, loadMasterItems]);
 
   const set = (field: string) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -223,7 +236,7 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
       {/* 明細行 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">明細</h3>
-        <LineItemsEditor items={lineItems} onChange={setLineItems} />
+        <LineItemsEditor items={lineItems} onChange={setLineItems} masterItems={masterItems} />
 
         {/* 値引き */}
         <div className="mt-4 flex justify-end">
