@@ -8,15 +8,14 @@ import {
   Font,
 } from '@react-pdf/renderer';
 import path from 'path';
-import { pathToFileURL } from 'url';
+import fs from 'fs';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { Invoice } from '@/types';
 
-Font.register({
-  family: 'IPAPGothic',
-  src: pathToFileURL(path.join(process.cwd(), 'public/fonts/IPAPGothic.ttf')).href,
-});
+const _fontBuf = fs.readFileSync(path.join(process.cwd(), 'public/fonts/IPAPGothic.ttf'));
+const _fontSrc = `data:font/truetype;base64,${_fontBuf.toString('base64')}`;
+Font.register({ family: 'IPAPGothic', src: _fontSrc });
 
 const styles = StyleSheet.create({
   page: {

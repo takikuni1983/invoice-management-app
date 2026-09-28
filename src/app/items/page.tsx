@@ -15,8 +15,14 @@ export default function ItemsPage() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    const res = await fetch('/api/items');
-    setItems(await res.json());
+    try {
+      const res = await fetch('/api/items');
+      const data = await res.json();
+      if (Array.isArray(data)) setItems(data);
+      else setError(data.error ?? '読み込みに失敗しました');
+    } catch (e: any) {
+      setError(e.message ?? '読み込みに失敗しました');
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);

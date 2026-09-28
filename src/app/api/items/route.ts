@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
-  const items = await prisma.itemMaster.findMany({ orderBy: { name: 'asc' } });
-  return NextResponse.json(items);
+  try {
+    const items = await prisma.itemMaster.findMany({ orderBy: { name: 'asc' } });
+    return NextResponse.json(items);
+  } catch (e) {
+    console.error('[items GET]', e);
+    return NextResponse.json({ error: 'データ取得に失敗しました。npx prisma migrate dev を実行してください。' }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {

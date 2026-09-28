@@ -19,7 +19,10 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
   const [masterItems, setMasterItems] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
-    fetch('/api/items').then((r) => r.json()).then(setMasterItems).catch(() => {});
+    fetch('/api/items')
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setMasterItems(d); })
+      .catch(() => {});
   }, []);
 
   const [form, setForm] = useState({
