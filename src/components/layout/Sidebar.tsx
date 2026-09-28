@@ -9,6 +9,7 @@ import {
   Receipt,
   ChevronRight,
   Package,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/estimates', label: '見積書', icon: FileText },
   { href: '/invoices', label: '請求書', icon: Receipt },
   { href: '/items', label: '品目マスタ', icon: Package },
+  { href: '/settings', label: '設定', icon: Settings },
 ];
 
 export default function Sidebar() {

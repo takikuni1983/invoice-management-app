@@ -14,6 +14,33 @@ model ItemMaster {
   updatedAt DateTime @updatedAt
 }
 
+model CompanyInfo {
+  id                 Int      @id @default(1)
+  companyName        String   @default("")
+  ownerName          String?
+  postalCode         String?
+  address            String?
+  phone              String?
+  registrationNumber String?
+  updatedAt          DateTime @updatedAt
+}
+
+model CustomFieldLabel {
+  id        Int      @id @default(autoincrement())
+  label     String   @unique
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model EstimateCustomField {
+  id         Int      @id @default(autoincrement())
+  estimateId Int
+  estimate   Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  label      String
+  value      String   @default("")
+  sortOrder  Int      @default(0)
+}
+
 model Customer {
   id           Int      @id @default(autoincrement())
   companyName  String
@@ -49,10 +76,12 @@ model Estimate {
   taxRate        Float    @default(10)
   taxAmount      Float    @default(0)
   totalAmount    Float    @default(0)
+  discount       Float    @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  lineItems EstimateLineItem[]
+  lineItems    EstimateLineItem[]
+  customFields EstimateCustomField[]
 }
 
 model EstimateLineItem {
@@ -66,6 +95,7 @@ model EstimateLineItem {
   unit        String?
   unitPrice   Float    @default(0)
   amount      Float    @default(0)
+  taxRate     Float    @default(10)
 }
 
 model Invoice {

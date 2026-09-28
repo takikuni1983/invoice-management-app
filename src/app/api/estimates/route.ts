@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { customerId, status, issueDate, expiryDate, subject, projectName, notes, terms, taxRate, lineItems } = body;
+  const { customerId, status, issueDate, expiryDate, subject, projectName, notes, terms, taxRate, lineItems, discount, customFields } = body;
 
   if (!customerId || !issueDate) {
     return NextResponse.json({ error: '顧客と発行日は必須です' }, { status: 400 });
@@ -44,17 +44,25 @@ export async function POST(req: NextRequest) {
     const items = (lineItems ?? []).map((item: any, i: number) => ({
       sortOrder: i,
       description: item.description,
-      details: item.details ?? '',
+      details: item.details ?? null,
       quantity: Number(item.quantity),
       unit: item.unit ?? '',
       unitPrice: Number(item.unitPrice),
       amount: Number(item.quantity) * Number(item.unitPrice),
+      taxRate: Number(item.taxRate ?? taxRate ?? 10),
     }));
 
     const subtotal = items.reduce((sum: number, item: any) => sum + item.amount, 0);
     const rate = Number(taxRate ?? 10);
-    const taxAmount = Math.round(subtotal * rate / 100);
-    const totalAmount = subtotal + taxAmount;
+    const taxAmount = items.reduce((sum: number, item: any) => sum + Math.round(item.amount * item.taxRate / 100), 0);
+    const discountAmount = Number(discount ?? 0);
+    const totalAmount = subtotal + taxAmount - discountAmount;
+
+    const fields = (customFields ?? []).map((cf: any, i: number) => ({
+      label: cf.label,
+      value: cf.value ?? '',
+      sortOrder: i,
+    }));
 
     return tx.estimate.create({
       data: {
@@ -71,9 +79,15 @@ export async function POST(req: NextRequest) {
         taxRate: rate,
         taxAmount,
         totalAmount,
+        discount: discountAmount,
         lineItems: { create: items },
+        customFields: fields.length > 0 ? { create: fields } : undefined,
       },
-      include: { customer: true, lineItems: { orderBy: { sortOrder: 'asc' } } },
+      include: {
+        customer: true,
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        customFields: { orderBy: { sortOrder: 'asc' } },
+      },
     });
   });
 
