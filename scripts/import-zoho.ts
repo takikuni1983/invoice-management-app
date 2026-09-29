@@ -11,8 +11,9 @@
 
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
-import { execSync } from 'child_process';
+import AdmZip from 'adm-zip';
 
 // ── CSV パーサー（ダブルクォート・改行対応） ────────────────────────────
 function parseCsv(text: string): Record<string, string>[] {
@@ -95,16 +96,22 @@ const INVOICE_STATUS: Record<string, string> = {
 
 // ── メイン ───────────────────────────────────────────────────────────────
 async function main() {
-  // ZIPを展開
+  // ZIPを展開（cross-platform）
   const zipArg = process.argv[2];
   let dataDir: string;
   if (zipArg) {
-    dataDir = '/tmp/zoho_import_work';
+    dataDir = path.join(os.tmpdir(), 'zoho_import_work');
     fs.mkdirSync(dataDir, { recursive: true });
-    execSync(`unzip -o "${zipArg}" -d "${dataDir}"`);
+    const zip = new AdmZip(zipArg);
+    zip.extractAllTo(dataDir, true);
+    console.log(`Extracted to ${dataDir}`);
   } else {
-    // デフォルト: すでに展開済みのパス
-    dataDir = '/tmp/zoho_export';
+    dataDir = path.join(os.tmpdir(), 'zoho_export');
+    if (!fs.existsSync(dataDir)) {
+      console.error('ZIPファイルのパスを引数に渡してください:');
+      console.error('  npm run import:zoho -- "path/to/export.zip"');
+      process.exit(1);
+    }
   }
 
   const prisma = new PrismaClient();
