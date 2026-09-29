@@ -119,13 +119,13 @@ const s = StyleSheet.create({
   colAmt:   { width: 68, textAlign: 'right' },
 
   totalsArea: { alignItems: 'flex-end', marginTop: 6 },
-  totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 3.5 },
+  totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 4 },
   totalLineLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
     color: C.gray, fontSize: 8, fontWeight: 400,
   },
   totalLineValue: {
-    fontFamily: 'Inter', width: 80, textAlign: 'right',
+    fontFamily: 'Inter', width: 80, textAlign: 'right', paddingRight: 6,
     fontSize: 8, color: C.base,
   },
   grandTotalRow: {

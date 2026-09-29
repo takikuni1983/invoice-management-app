@@ -182,21 +182,21 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           </tbody>
         </table>
 
-        {/* 集計 */}
+        {/* 集計: 右端をテーブルの総額列に揃える */}
         <div className="flex justify-end mt-2">
-          <div className="w-64 text-sm">
-            <div className="flex justify-between py-2 border-b" style={{ borderColor: '#e3e3e3' }}>
-              <span style={{ color: '#727272' }}>小計</span>
-              <span>{subtotal.toLocaleString('ja-JP')}</span>
+          <div className="text-sm" style={{ minWidth: '16rem' }}>
+            <div className="flex justify-between py-2">
+              <span className="pr-6" style={{ color: '#727272' }}>小計</span>
+              <span className="pr-3 tabular-nums">{subtotal.toLocaleString('ja-JP')}</span>
             </div>
-            <div className="flex justify-between py-2 border-b" style={{ borderColor: '#e3e3e3' }}>
-              <span style={{ color: '#727272' }}>{taxLabel}</span>
-              <span>{taxAmount.toLocaleString('ja-JP')}</span>
+            <div className="flex justify-between py-2">
+              <span className="pr-6" style={{ color: '#727272' }}>{taxLabel}</span>
+              <span className="pr-3 tabular-nums">{taxAmount.toLocaleString('ja-JP')}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between py-2 border-b" style={{ borderColor: '#e3e3e3' }}>
-                <span style={{ color: '#727272' }}>値引き</span>
-                <span>(-) {discount.toLocaleString('ja-JP')}</span>
+              <div className="flex justify-between py-2">
+                <span className="pr-6" style={{ color: '#727272' }}>値引き</span>
+                <span className="pr-3 tabular-nums">(-) {discount.toLocaleString('ja-JP')}</span>
               </div>
             )}
             <div
@@ -204,7 +204,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
               style={{ backgroundColor: '#eeeeee' }}
             >
               <span>総額</span>
-              <span>¥{total.toLocaleString('ja-JP')}</span>
+              <span className="tabular-nums">¥{total.toLocaleString('ja-JP')}</span>
             </div>
           </div>
         </div>
