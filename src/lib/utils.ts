@@ -50,6 +50,8 @@ export const ESTIMATE_STATUS_LABELS: Record<string, string> = {
   SENT: '送信済み',
   APPROVED: '承認済み',
   INVOICED: '請求済み',
+  EXPIRED: '期限切れ',
+  REJECTED: '却下',
 };
 
 export const INVOICE_STATUS_LABELS: Record<string, string> = {
@@ -64,6 +66,8 @@ export const ESTIMATE_STATUS_COLORS: Record<string, string> = {
   SENT: 'bg-blue-100 text-blue-700',
   APPROVED: 'bg-green-100 text-green-700',
   INVOICED: 'bg-purple-100 text-purple-700',
+  EXPIRED: 'bg-orange-100 text-orange-700',
+  REJECTED: 'bg-red-100 text-red-700',
 };
 
 export const INVOICE_STATUS_COLORS: Record<string, string> = {

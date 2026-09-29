@@ -84,14 +84,14 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         </div>
 
         {/* タイトル */}
-        <h1 className="text-3xl font-medium text-center mb-6" style={{ color: '#817D7D' }}>見積書</h1>
+        <h1 className="text-3xl font-medium text-center mb-6" style={{ color: '#817D7D', letterSpacing: '0.15em' }}>見積書</h1>
 
         {/* ヘッダー 2カラム */}
-        <div className="flex gap-8 mb-4">
+        <div className="flex gap-12 mb-4">
           {/* 左: 送付先 + 有効期限 + 件名 + カスタムフィールド */}
-          <div className="flex-1">
+          <div style={{ flex: '0 1 55%' }}>
             <p className="text-xs mb-1" style={{ color: '#817D7D' }}>送付先</p>
-            <p className="text-xl font-medium mb-3">{estimate.customer.companyName} 御中</p>
+            <p className="text-sm font-medium mb-3">{estimate.customer.companyName} 御中</p>
 
             {estimate.expiryDate && (
               <div className="flex gap-2 mb-2 text-sm">
@@ -118,31 +118,39 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
             ))}
           </div>
 
-          {/* 右: 自社情報 */}
-          {companyInfo?.companyName && (
-            <div className="w-48 text-sm space-y-1">
-              <p className="font-medium text-sm">
-                {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
-              </p>
-              {companyInfo.postalCode    && <p className="text-xs text-gray-500">{companyInfo.postalCode}</p>}
-              {companyInfo.address       && <p className="text-xs text-gray-500">{companyInfo.address}</p>}
-              {companyInfo.phone         && <p className="text-xs text-gray-500">電話番号 : {companyInfo.phone}</p>}
-              {companyInfo.registrationNumber && (
-                <p className="text-xs text-gray-500">登録番号 : {companyInfo.registrationNumber}</p>
-              )}
+          {/* 右: 自社情報 + 印鑑枠（常に表示） */}
+          <div className="w-44 text-sm">
+            {companyInfo?.companyName && (
+              <div className="space-y-1 mb-3">
+                <p className="font-medium text-sm">
+                  {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
+                </p>
+                {companyInfo.postalCode    && <p className="text-xs text-gray-500">{companyInfo.postalCode}</p>}
+                {companyInfo.address       && <p className="text-xs text-gray-500">{companyInfo.address}</p>}
+                {companyInfo.phone         && <p className="text-xs text-gray-500">電話番号 : {companyInfo.phone}</p>}
+                {companyInfo.registrationNumber && (
+                  <p className="text-xs text-gray-500">登録番号 : {companyInfo.registrationNumber}</p>
+                )}
+              </div>
+            )}
+            {/* 印鑑用枠 */}
+            <div className="flex gap-1 mt-2">
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
             </div>
-          )}
+          </div>
         </div>
 
         {/* 総額バー: 左カラム幅に収まる */}
-        <div className="flex gap-8 mb-6">
-          <div className="flex-1">
+        <div className="flex gap-12 mb-10">
+          <div style={{ flex: '0 1 55%' }}>
             <div className="flex justify-between items-center border-b-2 border-gray-400 py-2">
-              <span className="text-gray-500">総額</span>
-              <span className="text-2xl font-medium">{formatCurrency(total)}</span>
+              <span className="text-sm text-gray-500">総額</span>
+              <span className="text-xl font-medium">{formatCurrency(total)}</span>
             </div>
           </div>
-          <div className="w-48" />
+          <div className="w-44" />
         </div>
 
         {/* 明細テーブル */}
@@ -184,23 +192,23 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
 
         {/* 集計: 右端をテーブルの総額列に揃える */}
         <div className="flex justify-end mt-2">
-          <div className="text-sm" style={{ minWidth: '16rem' }}>
-            <div className="flex justify-between py-2">
+          <div className="text-xs" style={{ minWidth: '16rem' }}>
+            <div className="flex justify-between py-1.5">
               <span className="pr-6" style={{ color: '#727272' }}>小計</span>
               <span className="pr-3 tabular-nums">{subtotal.toLocaleString('ja-JP')}</span>
             </div>
-            <div className="flex justify-between py-2">
+            <div className="flex justify-between py-1.5">
               <span className="pr-6" style={{ color: '#727272' }}>{taxLabel}</span>
               <span className="pr-3 tabular-nums">{taxAmount.toLocaleString('ja-JP')}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between py-2">
+              <div className="flex justify-between py-1.5">
                 <span className="pr-6" style={{ color: '#727272' }}>値引き</span>
                 <span className="pr-3 tabular-nums">(-) {discount.toLocaleString('ja-JP')}</span>
               </div>
             )}
             <div
-              className="flex justify-between py-2 px-3 font-medium mt-1"
+              className="flex justify-between py-2 px-3 font-medium mt-1 text-sm"
               style={{ backgroundColor: '#eeeeee' }}
             >
               <span>総額</span>

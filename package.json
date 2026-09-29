@@ -6,7 +6,8 @@
     "dev": "next dev -p 4000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "import:zoho": "ts-node --project tsconfig.scripts.json scripts/import-zoho.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

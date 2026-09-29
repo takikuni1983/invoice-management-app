@@ -55,17 +55,18 @@ const s = StyleSheet.create({
     fontWeight: 500,
     textAlign: 'center',
     color: C.title,
+    letterSpacing: 3,
     marginTop: 4,
     marginBottom: 18,
   },
 
-  // ヘッダー 2カラム（총額バーも同じ幅制御に使用）
+  // ヘッダー 2カラム（総額バーも同じ幅制御に使用）
   twoCol:      { flexDirection: 'row', marginBottom: 18 },
-  leftCol:     { flex: 1, paddingRight: 20 },
-  rightCol:    { width: 200 },
+  leftCol:     { flex: 1, paddingRight: 30 },
+  rightCol:    { width: 170 },
 
   toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
-  toCompany: { fontSize: 13, fontWeight: 500, color: C.base, marginBottom: 10 },
+  toCompany: { fontSize: 8.5, fontWeight: 500, color: C.base, marginBottom: 10 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
   cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
@@ -75,7 +76,7 @@ const s = StyleSheet.create({
   companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
   companyLine: { fontSize: 7.5, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
 
-  stampArea: { flexDirection: 'row', marginTop: 10, height: 46 },
+  stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
 
   // 総額バー: 下線のみ・左カラムに収まる
@@ -88,8 +89,8 @@ const s = StyleSheet.create({
     paddingBottom: 7,
     paddingTop: 4,
   },
-  totalBarLabel: { fontSize: 10, fontWeight: 400, color: C.gray },
-  totalBarValue: { fontFamily: 'Inter', fontSize: 15, fontWeight: 500, color: C.base },
+  totalBarLabel: { fontSize: 8, fontWeight: 400, color: C.gray },
+  totalBarValue: { fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: C.base },
 
   tableHead: {
     flexDirection: 'row',
@@ -122,27 +123,27 @@ const s = StyleSheet.create({
   totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 4 },
   totalLineLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
-    color: C.gray, fontSize: 8, fontWeight: 400,
+    color: C.gray, fontSize: 7, fontWeight: 400,
   },
   totalLineValue: {
     fontFamily: 'Inter', width: 80, textAlign: 'right', paddingRight: 6,
-    fontSize: 8, color: C.base,
+    fontSize: 7, color: C.base,
   },
   grandTotalRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     backgroundColor: C.totalBg,
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 6,
     marginTop: 4,
   },
   grandLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
-    color: C.base, fontSize: 9, fontWeight: 500,
+    color: C.base, fontSize: 8, fontWeight: 500,
   },
   grandValue: {
     fontFamily: 'Inter', width: 80, textAlign: 'right',
-    fontSize: 9, fontWeight: 500, color: C.base,
+    fontSize: 8, fontWeight: 500, color: C.base,
   },
 
   section:      { marginTop: 16 },
@@ -239,7 +240,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
             ))}
           </View>
 
-          {/* 右: 自社情報 + 印鑑 */}
+          {/* 右: 自社情報 + 印鑑（常に表示） */}
           <View style={s.rightCol}>
             {companyInfo?.companyName ? (
               <>
@@ -263,7 +264,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
         </View>
 
         {/* 総額バー: 左カラムと同じ幅 */}
-        <View style={[s.twoCol, { marginBottom: 22 }]}>
+        <View style={[s.twoCol, { marginBottom: 30 }]}>
           <View style={s.leftCol}>
             <View style={s.totalBar}>
               <Text style={s.totalBarLabel}>総額</Text>
