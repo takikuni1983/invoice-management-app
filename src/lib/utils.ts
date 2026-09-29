@@ -23,10 +23,11 @@ export function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
-export function formatDateInput(dateStr: string | null | undefined): string {
-  if (!dateStr) return '';
+export function formatDateInput(d: Date | string | null | undefined): string {
+  if (!d) return '';
   try {
-    return format(parseISO(dateStr), 'yyyy-MM-dd');
+    const date = d instanceof Date ? d : parseISO(String(d));
+    return format(date, 'yyyy-MM-dd');
   } catch {
     return '';
   }

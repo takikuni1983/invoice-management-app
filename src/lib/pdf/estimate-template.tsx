@@ -8,35 +8,36 @@ import { format, parseISO } from 'date-fns';
 import { Estimate } from '@/types';
 
 // ── フォント登録 ─────────────────────────────────────────────
-const _zenReg  = fs.readFileSync(path.join(process.cwd(), 'public/fonts/ZenKakuGothicNew-Regular.ttf'));
-const _zenBold = fs.readFileSync(path.join(process.cwd(), 'public/fonts/ZenKakuGothicNew-Bold.ttf'));
+const _ibmReg  = fs.readFileSync(path.join(process.cwd(), 'public/fonts/IBMPlexSansJP-Regular.ttf'));
+const _ibmMed  = fs.readFileSync(path.join(process.cwd(), 'public/fonts/IBMPlexSansJP-Medium.ttf'));
 const _inter   = fs.readFileSync(path.join(process.cwd(), 'public/fonts/InterVariable.ttf'));
 
 Font.register({
-  family: 'ZenKaku',
+  family: 'IBMPlex',
   fonts: [
-    { src: `data:font/truetype;base64,${_zenReg.toString('base64')}`,  fontWeight: 'normal' },
-    { src: `data:font/truetype;base64,${_zenBold.toString('base64')}`, fontWeight: 'bold' },
+    { src: `data:font/truetype;base64,${_ibmReg.toString('base64')}`, fontWeight: 400 },
+    { src: `data:font/truetype;base64,${_ibmMed.toString('base64')}`, fontWeight: 500 },
   ],
 });
 Font.register({ family: 'Inter', src: `data:font/truetype;base64,${_inter.toString('base64')}` });
 
-// ── カラー（仕様準拠） ────────────────────────────────────────
+// ── カラー ───────────────────────────────────────────────────
 const C = {
-  base:       '#000000',   // 基本フォントカラー
-  title:      '#817D7D',   // タイトル・見出しカラー
-  mid:        '#3c3d3a',   // 表ヘッダー背景
-  gray:       '#727272',   // 注釈・サブテキスト
-  border:     '#e3e3e3',   // 表の罫線
-  veryLight:  '#F9FAFB',   // 交互行背景
-  white:      '#FFFFFF',
+  base:      '#000000',
+  title:     '#817D7D',
+  tableHead: '#3c3d3a',
+  gray:      '#727272',
+  border:    '#e3e3e3',
+  totalBg:   '#eeeeee',
+  white:     '#FFFFFF',
 };
 
 // ── スタイル ─────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
-    fontFamily: 'ZenKaku',
+    fontFamily: 'IBMPlex',
     fontSize: 8,
+    fontWeight: 400,
     paddingTop: 36,
     paddingHorizontal: 40,
     paddingBottom: 44,
@@ -45,97 +46,83 @@ const s = StyleSheet.create({
     lineHeight: 1.6,
   },
 
-  // 右上: 見積番号・日付
   topRight: { position: 'absolute', top: 36, right: 40, textAlign: 'right' },
-  docNumber: { fontFamily: 'Inter', fontSize: 9, fontWeight: 'bold', color: C.base },
+  docNumber: { fontFamily: 'Inter', fontSize: 9, fontWeight: 500, color: C.base },
   docDate:   { fontFamily: 'Inter', fontSize: 7.5, color: C.gray, marginTop: 2 },
 
-  // タイトル
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 500,
     textAlign: 'center',
     color: C.title,
     marginTop: 4,
     marginBottom: 18,
   },
 
-  // ヘッダー 2カラム
-  headerRow:   { flexDirection: 'row', marginBottom: 18 },
-  headerLeft:  { flex: 1, paddingRight: 20 },
-  headerRight: { width: 200 },
+  // ヘッダー 2カラム（총額バーも同じ幅制御に使用）
+  twoCol:      { flexDirection: 'row', marginBottom: 18 },
+  leftCol:     { flex: 1, paddingRight: 20 },
+  rightCol:    { width: 200 },
 
-  // 送付先
   toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
-  toCompany: { fontSize: 13, fontWeight: 'bold', color: C.base, marginBottom: 10 },
+  toCompany: { fontSize: 13, fontWeight: 500, color: C.base, marginBottom: 10 },
 
-  // 件名（送付先直下）
-  subjectRow:   { flexDirection: 'row', marginBottom: 3 },
-  subjectLabel: { fontSize: 7.5, color: C.title },
-  subjectValue: { fontSize: 7.5, color: C.base, marginLeft: 4 },
-
-  // カスタムフィールド行
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
-  cfLabel: { width: 56, fontSize: 8, color: C.title, lineHeight: 1.6 },
+  cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
   cfColon: { width: 10, fontSize: 8, color: C.title, lineHeight: 1.6 },
-  cfValue: { flex: 1, fontSize: 8, fontWeight: 'bold', color: C.base, lineHeight: 1.6 },
+  cfValue: { flex: 1, fontSize: 8, fontWeight: 500, color: C.base, lineHeight: 1.6 },
 
-  // 自社情報
-  companyName: { fontSize: 9.5, fontWeight: 'bold', color: C.base, marginBottom: 4 },
-  companyLine: { fontSize: 7.5, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
+  companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
+  companyLine: { fontSize: 7.5, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
 
-  // 印鑑枠 3マス
   stampArea: { flexDirection: 'row', marginTop: 10, height: 46 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
 
-  // 総額バー
+  // 総額バー: 下線のみ・左カラムに収まる
   totalBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1.5,
     borderBottomWidth: 1.5,
     borderColor: '#9CA3AF',
-    paddingVertical: 7,
-    marginBottom: 22,
+    paddingBottom: 7,
+    paddingTop: 4,
   },
-  totalBarLabel: { fontSize: 10, color: C.gray },
-  totalBarValue: { fontFamily: 'Inter', fontSize: 15, fontWeight: 'bold', color: C.base },
+  totalBarLabel: { fontSize: 10, fontWeight: 400, color: C.gray },
+  totalBarValue: { fontFamily: 'Inter', fontSize: 15, fontWeight: 500, color: C.base },
 
-  // 明細テーブル
   tableHead: {
     flexDirection: 'row',
-    backgroundColor: C.mid,
+    backgroundColor: C.tableHead,
     paddingVertical: 6,
     paddingHorizontal: 6,
   },
-  tableHeadText: { color: C.white, fontSize: 9, fontWeight: 'bold' },
+  tableHeadText: { color: C.white, fontSize: 9, fontWeight: 500 },
 
+  // 行は全て白
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 0.5,
     borderColor: C.border,
     paddingVertical: 9,
     paddingHorizontal: 6,
+    backgroundColor: C.white,
   },
-  tableRowAlt: { backgroundColor: C.veryLight },
 
-  itemName:   { fontSize: 8, fontWeight: 'bold', color: C.base, marginBottom: 3 },
-  itemDetail: { fontSize: 7, color: C.gray, lineHeight: 1.6 },
+  itemName:   { fontSize: 8, fontWeight: 500, color: C.base, marginBottom: 3 },
+  itemDetail: { fontSize: 7, fontWeight: 400, color: C.gray, lineHeight: 1.6 },
 
-  // 列幅（単位列なし）
   colDesc:  { flex: 1 },
   colQty:   { width: 38, textAlign: 'right' },
   colPrice: { width: 64, textAlign: 'right' },
   colTax:   { width: 44, textAlign: 'right' },
   colAmt:   { width: 68, textAlign: 'right' },
 
-  // 集計
   totalsArea: { alignItems: 'flex-end', marginTop: 6 },
   totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 3.5 },
   totalLineLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
-    color: C.gray, fontSize: 8,
+    color: C.gray, fontSize: 8, fontWeight: 400,
   },
   totalLineValue: {
     fontFamily: 'Inter', width: 80, textAlign: 'right',
@@ -144,29 +131,28 @@ const s = StyleSheet.create({
   grandTotalRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    backgroundColor: C.mid,
+    backgroundColor: C.totalBg,
     paddingVertical: 7,
     paddingHorizontal: 6,
     marginTop: 4,
   },
   grandLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
-    color: C.white, fontSize: 9, fontWeight: 'bold',
+    color: C.base, fontSize: 9, fontWeight: 500,
   },
   grandValue: {
     fontFamily: 'Inter', width: 80, textAlign: 'right',
-    fontSize: 9, fontWeight: 'bold', color: C.white,
+    fontSize: 9, fontWeight: 500, color: C.base,
   },
 
-  // 備考・取引条件
   section:      { marginTop: 16 },
   sectionLabel: {
-    fontSize: 7, color: C.title,
+    fontSize: 7, fontWeight: 400, color: C.title,
     borderBottomWidth: 0.5, borderColor: C.border,
     paddingBottom: 3, marginBottom: 5,
   },
-  noteBox:  { backgroundColor: C.veryLight, padding: 7, borderRadius: 2 },
-  noteText: { fontSize: 7.5, color: C.base, lineHeight: 1.7 },
+  noteBox:  { backgroundColor: '#F9FAFB', padding: 7, borderRadius: 2 },
+  noteText: { fontSize: 7.5, fontWeight: 400, color: C.base, lineHeight: 1.7 },
 });
 
 // ── ユーティリティ ───────────────────────────────────────────
@@ -205,15 +191,14 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
   const taxAmount = Object.values(taxByRate).reduce((a, b) => a + b, 0);
   const discount  = estimate.discount ?? 0;
   const total     = subtotal + taxAmount - discount;
-
-  const taxRates = Object.keys(taxByRate).map(Number).filter(r => r > 0);
-  const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
+  const taxRates  = Object.keys(taxByRate).map(Number).filter(r => r > 0);
+  const taxLabel  = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
 
-        {/* 右上: 見積番号・日付 */}
+        {/* 右上 */}
         <View style={s.topRight}>
           <Text style={s.docNumber}>{estimate.estimateNumber}</Text>
           <Text style={s.docDate}>{fmtDate(estimate.issueDate)}</Text>
@@ -223,15 +208,22 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
         <Text style={s.title}>見積書</Text>
 
         {/* ヘッダー 2カラム */}
-        <View style={s.headerRow}>
-
-          {/* 左: 送付先 + 件名 + カスタムフィールド */}
-          <View style={s.headerLeft}>
+        <View style={s.twoCol}>
+          {/* 左: 送付先 + 有効期限 + 件名 + カスタムフィールド */}
+          <View style={s.leftCol}>
             <Text style={s.toLabel}>送付先</Text>
             <Text style={s.toCompany}>{customer?.companyName} 御中</Text>
 
+            {estimate.expiryDate ? (
+              <View style={s.cfRow}>
+                <Text style={s.cfLabel}>有効期限</Text>
+                <Text style={s.cfColon}> :</Text>
+                <Text style={s.cfValue}> {fmtDate(estimate.expiryDate)}</Text>
+              </View>
+            ) : null}
+
             {estimate.subject ? (
-              <View style={[s.cfRow, { marginBottom: 8 }]}>
+              <View style={s.cfRow}>
                 <Text style={s.cfLabel}>件名</Text>
                 <Text style={s.cfColon}> :</Text>
                 <Text style={s.cfValue}> {estimate.subject}</Text>
@@ -247,22 +239,16 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
             ))}
           </View>
 
-          {/* 右: 自社情報 + 印鑑枠 */}
-          <View style={s.headerRight}>
+          {/* 右: 自社情報 + 印鑑 */}
+          <View style={s.rightCol}>
             {companyInfo?.companyName ? (
               <>
                 <Text style={s.companyName}>
                   {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
                 </Text>
-                {companyInfo.postalCode && (
-                  <Text style={s.companyLine}>{companyInfo.postalCode}</Text>
-                )}
-                {companyInfo.address && (
-                  <Text style={s.companyLine}>{companyInfo.address}</Text>
-                )}
-                {companyInfo.phone && (
-                  <Text style={s.companyLine}>電話番号 : {companyInfo.phone}</Text>
-                )}
+                {companyInfo.postalCode && <Text style={s.companyLine}>{companyInfo.postalCode}</Text>}
+                {companyInfo.address    && <Text style={s.companyLine}>{companyInfo.address}</Text>}
+                {companyInfo.phone      && <Text style={s.companyLine}>電話番号 : {companyInfo.phone}</Text>}
                 {companyInfo.registrationNumber && (
                   <Text style={s.companyLine}>登録番号 : {companyInfo.registrationNumber}</Text>
                 )}
@@ -276,10 +262,15 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
           </View>
         </View>
 
-        {/* 総額バー */}
-        <View style={s.totalBar}>
-          <Text style={s.totalBarLabel}>総額</Text>
-          <Text style={s.totalBarValue}>¥{fmtNum(total)}</Text>
+        {/* 総額バー: 左カラムと同じ幅 */}
+        <View style={[s.twoCol, { marginBottom: 22 }]}>
+          <View style={s.leftCol}>
+            <View style={s.totalBar}>
+              <Text style={s.totalBarLabel}>総額</Text>
+              <Text style={s.totalBarValue}>¥{fmtNum(total)}</Text>
+            </View>
+          </View>
+          <View style={s.rightCol} />
         </View>
 
         {/* 明細テーブル */}
@@ -293,7 +284,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
           </View>
 
           {lineItems.map((item, i) => (
-            <View key={i} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
+            <View key={i} style={s.tableRow}>
               <View style={s.colDesc}>
                 <Text style={s.itemName}>{item.description}</Text>
                 {(item as any).details ? (
@@ -332,24 +323,18 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
           </View>
         </View>
 
-        {/* 備考 */}
         {estimate.notes && (
           <View style={s.section}>
             <Text style={s.sectionLabel}>備考</Text>
-            <View style={s.noteBox}>
-              <Text style={s.noteText}>{estimate.notes}</Text>
-            </View>
+            <View style={s.noteBox}><Text style={s.noteText}>{estimate.notes}</Text></View>
           </View>
         )}
-
-        {/* 取引条件 */}
         {estimate.terms && (
           <View style={s.section}>
             <Text style={s.sectionLabel}>取引条件</Text>
             <Text style={s.noteText}>{estimate.terms}</Text>
           </View>
         )}
-
       </Page>
     </Document>
   );
