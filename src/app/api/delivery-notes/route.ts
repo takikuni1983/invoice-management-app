@@ -7,66 +7,54 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get('status');
   const customerId = searchParams.get('customerId');
-  const estimateId = searchParams.get('estimateId');
+  const invoiceId = searchParams.get('invoiceId');
 
-  const orders = await prisma.orderAcceptance.findMany({
+  const notes = await prisma.deliveryNote.findMany({
     where: {
       ...(status ? { status } : {}),
       ...(customerId ? { customerId: Number(customerId) } : {}),
-      ...(estimateId ? { estimateId: Number(estimateId) } : {}),
+      ...(invoiceId ? { invoiceId: Number(invoiceId) } : {}),
     },
     include: { customer: true },
     orderBy: { createdAt: 'desc' },
   });
 
-  return NextResponse.json(orders);
+  return NextResponse.json(notes);
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const {
-    customerId, estimateId, status, orderDate, subject, deliveryDate, deliveryPlace,
-    paymentTerms, notes, lineItems, discount, customFields,
+    customerId, invoiceId, status, deliveryDate, subject, deliveryFormat,
+    notes, lineItems, discount, customFields,
   } = body;
 
-  if (!customerId || !orderDate) {
-    return NextResponse.json({ error: '顧客と発注日は必須です' }, { status: 400 });
+  if (!customerId || !deliveryDate) {
+    return NextResponse.json({ error: '顧客と納品日は必須です' }, { status: 400 });
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const orderNumber = await resolveNumber(tx, 'order', body.orderNumber);
+    const deliveryNumber = await resolveNumber(tx, 'delivery', body.deliveryNumber);
 
     const items = buildLineItems(lineItems);
     const totals = calcTotals(items, discount);
     const fields = buildCustomFields(customFields);
 
-    const order = await tx.orderAcceptance.create({
+    return tx.deliveryNote.create({
       data: {
-        orderNumber,
+        deliveryNumber,
         customerId: Number(customerId),
-        estimateId: estimateId ? Number(estimateId) : null,
+        invoiceId: invoiceId ? Number(invoiceId) : null,
         status: status ?? 'DRAFT',
-        orderDate: new Date(orderDate),
+        deliveryDate: new Date(deliveryDate),
         subject: subject ?? '',
-        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
-        deliveryPlace: deliveryPlace ?? '',
-        paymentTerms: paymentTerms ?? '',
+        deliveryFormat: deliveryFormat ?? '',
         notes: notes ?? '',
         ...totals,
         lineItems: { create: items },
         customFields: fields.length > 0 ? { create: fields } : undefined,
       },
     });
-
-    // 発注を受けた見積書は「承認済み」にする（請求済みなど先のステータスは維持）
-    if (estimateId) {
-      await tx.estimate.updateMany({
-        where: { id: Number(estimateId), status: { in: ['DRAFT', 'SENT'] } },
-        data: { status: 'APPROVED' },
-      });
-    }
-
-    return order;
   }).catch(numberErrorResponse);
   if (result instanceof Response) return result;
 

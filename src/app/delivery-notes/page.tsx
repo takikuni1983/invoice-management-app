@@ -8,9 +8,9 @@ const STATUS_TABS = [
   { value: 'SENT', label: '送付済み' },
 ];
 
-const SORT_KEYS = [...DOCUMENT_SORT_KEYS, 'orderDate'] as const;
+const SORT_KEYS = [...DOCUMENT_SORT_KEYS, 'deliveryDate'] as const;
 
-export default async function OrdersPage({
+export default async function DeliveryNotesPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string; search?: string; sort?: string; dir?: string }>;
@@ -18,52 +18,52 @@ export default async function OrdersPage({
   const { status = '', search = '', ...q } = await searchParams;
   const sort = parseSort(q.sort, q.dir, SORT_KEYS);
   const orderBy = {
-    number: { orderNumber: sort.dir },
+    number: { deliveryNumber: sort.dir },
     customer: { customer: { companyName: sort.dir } },
     subject: { subject: sort.dir },
     status: { status: sort.dir },
     total: { totalAmount: sort.dir },
-    orderDate: { orderDate: sort.dir },
+    deliveryDate: { deliveryDate: sort.dir },
   }[sort.key ?? ''] ?? { createdAt: 'desc' as const };
 
-  const orders = await prisma.orderAcceptance.findMany({
+  const notes = await prisma.deliveryNote.findMany({
     where: {
       ...(status ? { status } : {}),
       ...(search
         ? {
             OR: [
-              { orderNumber: { contains: search } },
+              { deliveryNumber: { contains: search } },
               { subject: { contains: search } },
               { customer: { companyName: { contains: search } } },
             ],
           }
         : {}),
     },
-    include: { customer: true, estimate: { select: { id: true, estimateNumber: true } } },
+    include: { customer: true, invoice: { select: { id: true, invoiceNumber: true } } },
     orderBy: [orderBy, { id: 'desc' }],
   });
 
   return (
     <DocumentList
-      basePath="/orders"
-      deleteType="orders"
-      badgeType="order"
+      basePath="/delivery-notes"
+      deleteType="delivery-notes"
+      badgeType="delivery"
       numberLabel="番号"
-      newLabel="新規発注請書"
+      newLabel="新規納品書"
       searchPlaceholder="番号・案件名・顧客名"
-      emptyMessage="発注請書がありません（見積書の詳細画面から作成できます）"
+      emptyMessage="納品書がありません（請求書の詳細画面から作成できます）"
       statusTabs={STATUS_TABS}
-      dateColumns={[{ key: 'orderDate', label: '発注日' }]}
-      sourceLabel="元見積"
-      rows={orders.map((o) => ({
+      dateColumns={[{ key: 'deliveryDate', label: '納品日' }]}
+      sourceLabel="元請求"
+      rows={notes.map((o) => ({
         id: o.id,
-        number: o.orderNumber,
+        number: o.deliveryNumber,
         customerName: o.customer.companyName,
         subject: o.subject,
         status: o.status,
-        dates: [o.orderDate],
+        dates: [o.deliveryDate],
         total: o.totalAmount,
-        source: o.estimate ? { href: `/estimates/${o.estimate.id}`, label: o.estimate.estimateNumber } : null,
+        source: o.invoice ? { href: `/invoices/${o.invoice.id}`, label: o.invoice.invoiceNumber } : null,
       }))}
       status={status}
       search={search}

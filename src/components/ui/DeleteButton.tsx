@@ -6,7 +6,7 @@ import { Trash2 } from 'lucide-react';
 
 interface Props {
   id: number;
-  type: 'customers' | 'estimates' | 'invoices' | 'orders';
+  type: 'customers' | 'estimates' | 'invoices' | 'orders' | 'delivery-notes';
   label?: string;
   redirectTo?: string;
 }

@@ -60,6 +60,7 @@ model Customer {
   estimates        Estimate[]
   invoices         Invoice[]
   orderAcceptances OrderAcceptance[]
+  deliveryNotes    DeliveryNote[]
 }
 
 model Estimate {
@@ -123,8 +124,9 @@ model Invoice {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  lineItems    InvoiceLineItem[]
-  customFields InvoiceCustomField[]
+  lineItems     InvoiceLineItem[]
+  customFields  InvoiceCustomField[]
+  deliveryNotes DeliveryNote[]
 }
 
 model InvoiceCustomField {
@@ -197,4 +199,51 @@ model OrderAcceptanceCustomField {
   label     String
   value     String          @default("")
   sortOrder Int             @default(0)
+}
+
+// 納品書（請求書をベースに作成）
+model DeliveryNote {
+  id             Int      @id @default(autoincrement())
+  deliveryNumber String   @unique
+  customerId     Int
+  customer       Customer @relation(fields: [customerId], references: [id])
+  invoiceId      Int?
+  invoice        Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  status         String   @default("DRAFT")
+  deliveryDate   DateTime
+  subject        String?
+  deliveryFormat String?
+  notes          String?
+  subtotal       Float    @default(0)
+  taxAmount      Float    @default(0)
+  discount       Float    @default(0)
+  totalAmount    Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  lineItems    DeliveryNoteLineItem[]
+  customFields DeliveryNoteCustomField[]
+}
+
+model DeliveryNoteLineItem {
+  id             Int          @id @default(autoincrement())
+  deliveryNoteId Int
+  deliveryNote   DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
+  sortOrder      Int          @default(0)
+  description    String
+  details        String?
+  quantity       Float        @default(1)
+  unit           String?
+  unitPrice      Float        @default(0)
+  amount         Float        @default(0)
+  taxRate        Float        @default(10)
+}
+
+model DeliveryNoteCustomField {
+  id             Int          @id @default(autoincrement())
+  deliveryNoteId Int
+  deliveryNote   DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
+  label          String
+  value          String       @default("")
+  sortOrder      Int          @default(0)
 }

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { nextNumber } from '@/lib/numbering';
 import OrderForm, { OrderFormInitial } from '@/components/orders/OrderForm';
 
 export default async function NewOrderPage({
@@ -8,7 +9,7 @@ export default async function NewOrderPage({
 }) {
   const { customerId, estimateId } = await searchParams;
 
-  const [customers, estimate] = await Promise.all([
+  const [customers, estimate, suggestedNumber] = await Promise.all([
     prisma.customer.findMany({ orderBy: { companyName: 'asc' } }),
     estimateId
       ? prisma.estimate.findUnique({
@@ -19,6 +20,7 @@ export default async function NewOrderPage({
           },
         })
       : null,
+    nextNumber(prisma, 'order'),
   ]);
 
   // 見積書の内容を引き継いで初期値にする
@@ -46,6 +48,7 @@ export default async function NewOrderPage({
         <div className="mb-6" />
       )}
       <OrderForm
+        suggestedNumber={suggestedNumber}
         order={initial}
         customers={customers as any}
         defaultCustomerId={customerId ? Number(customerId) : undefined}

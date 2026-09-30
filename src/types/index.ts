@@ -1,6 +1,7 @@
 export type EstimateStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'INVOICED';
 export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE';
 export type OrderStatus = 'DRAFT' | 'SENT';
+export type DeliveryStatus = 'DRAFT' | 'SENT';
 
 export interface CustomField {
   id?: number;
@@ -96,6 +97,27 @@ export interface OrderAcceptance {
   deliveryDate?: string | null;
   deliveryPlace?: string | null;
   paymentTerms?: string | null;
+  notes?: string | null;
+  subtotal: number;
+  taxAmount: number;
+  discount: number;
+  totalAmount: number;
+  lineItems: LineItem[];
+  customFields?: CustomField[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeliveryNote {
+  id: number;
+  deliveryNumber: string;
+  customerId: number;
+  customer?: Customer;
+  invoiceId?: number | null;
+  status: DeliveryStatus;
+  deliveryDate: string;
+  subject?: string | null;
+  deliveryFormat?: string | null;
   notes?: string | null;
   subtotal: number;
   taxAmount: number;

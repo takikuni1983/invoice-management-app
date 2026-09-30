@@ -5,7 +5,7 @@ import {
 import path from 'path';
 import fs from 'fs';
 import { format, parseISO } from 'date-fns';
-import { OrderAcceptance } from '@/types';
+import { OrderAcceptance, DeliveryNote, LineItem } from '@/types';
 
 // ── フォント登録 ─────────────────────────────────────────────
 const _ibmReg = fs.readFileSync(path.join(process.cwd(), 'public/fonts/IBMPlexSansJP-Regular.ttf'));
@@ -78,7 +78,7 @@ const s = StyleSheet.create({
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
   // 幅0の基準点から絶対配置し、レイアウトに影響させない
   stampAnchor: { width: 0, height: 0 },
-  stampImage:  { position: 'absolute', left: -6, top: -12, width: 40, height: 40, objectFit: 'contain' },
+  stampImage:  { position: 'absolute', left: -6, top: -4, width: 40, height: 40, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -158,26 +158,45 @@ const s = StyleSheet.create({
 });
 
 // ── ユーティリティ ───────────────────────────────────────────
-function fmtDate(d: Date | string | null | undefined) {
+export function fmtDate(d: Date | string | null | undefined) {
   if (!d) return '';
   try {
     const date = d instanceof Date ? d : parseISO(String(d));
     return format(date, 'yyyy年M月d日');
   } catch { return String(d); }
 }
+function fmtQty(n: number) {
+  return new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2 }).format(n);
+}
 function fmtNum(n: number) {
   return new Intl.NumberFormat('ja-JP').format(Math.round(n));
 }
 
 // ── コンポーネント ───────────────────────────────────────────
-interface Props {
-  order: OrderAcceptance;
-  companyInfo?: {
-    companyName: string; ownerName?: string | null;
-    postalCode?: string | null; address?: string | null;
-    phone?: string | null; registrationNumber?: string | null;
-    stampImage?: string | null;
-  };
+// 発注請書・納品書で共通のレイアウト（文言・項目だけ差し替える）
+type CompanyInfo = {
+  companyName: string; ownerName?: string | null;
+  postalCode?: string | null; address?: string | null;
+  phone?: string | null; registrationNumber?: string | null;
+  stampImage?: string | null;
+};
+
+export interface SimpleDocProps {
+  title: string;
+  docNumber: string;
+  dateLabel: string;
+  date: Date | string;
+  customerName?: string;
+  lead: string;
+  infoRows: { label: string; value?: string | null }[];
+  totalLabel: string;
+  lineItems: LineItem[];
+  subtotal: number;
+  taxAmount: number;
+  discount: number;
+  total: number;
+  notes?: string | null;
+  companyInfo?: CompanyInfo;
 }
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
@@ -191,14 +210,10 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-export function OrderAcceptancePDF({ order, companyInfo }: Props) {
-  const { customer, lineItems, customFields = [] } = order;
-
-  const subtotal  = order.subtotal;
-  const taxAmount = order.taxAmount;
-  const discount  = order.discount ?? 0;
-  const total     = order.totalAmount;
-
+export function SimpleDocPDF({
+  title, docNumber, dateLabel, date, customerName, lead, infoRows, totalLabel,
+  lineItems, subtotal, taxAmount, discount, total, notes, companyInfo,
+}: SimpleDocProps) {
   const taxRates = Array.from(new Set(lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
   const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
 
@@ -208,26 +223,22 @@ export function OrderAcceptancePDF({ order, companyInfo }: Props) {
 
         {/* 右上 */}
         <View style={s.topRight}>
-          <Text style={s.docNumber}>{order.orderNumber}</Text>
-          <Text style={s.docDate}>発注日 : {fmtDate(order.orderDate)}</Text>
+          <Text style={s.docNumber}>{docNumber}</Text>
+          <Text style={s.docDate}>{dateLabel} : {fmtDate(date)}</Text>
         </View>
 
         {/* タイトル */}
-        <Text style={s.title}>発注請書</Text>
+        <Text style={s.title}>{title}</Text>
 
         {/* ヘッダー 2カラム */}
         <View style={s.twoCol}>
-          {/* 左: 発注元 + 文言 + 案件情報 */}
+          {/* 左: 宛先 + 文言 + 案件情報 */}
           <View style={s.leftCol}>
-            <Text style={s.toCompany}>{customer?.companyName} 御中</Text>
-            <Text style={s.lead}>下記の通り発注を承りました。</Text>
+            <Text style={s.toCompany}>{customerName} 御中</Text>
+            <Text style={s.lead}>{lead}</Text>
 
-            <InfoRow label="案件名" value={order.subject} />
-            <InfoRow label="納期" value={fmtDate(order.deliveryDate)} />
-            <InfoRow label="納入場所" value={order.deliveryPlace} />
-            <InfoRow label="支払条件" value={order.paymentTerms} />
-            {customFields.map((cf, i) => (
-              <InfoRow key={i} label={cf.label} value={cf.value} />
+            {infoRows.map((row, i) => (
+              <InfoRow key={i} label={row.label} value={row.value} />
             ))}
           </View>
 
@@ -261,11 +272,11 @@ export function OrderAcceptancePDF({ order, companyInfo }: Props) {
           </View>
         </View>
 
-        {/* 発注金額バー */}
+        {/* 金額バー */}
         <View style={[s.twoCol, { marginBottom: 30 }]}>
           <View style={s.leftCol}>
             <View style={s.totalBar}>
-              <Text style={s.totalBarLabel}>発注金額</Text>
+              <Text style={s.totalBarLabel}>{totalLabel}</Text>
               <Text style={s.totalBarValue}>¥{fmtNum(total)}</Text>
             </View>
           </View>
@@ -287,7 +298,7 @@ export function OrderAcceptancePDF({ order, companyInfo }: Props) {
                 <Text style={s.itemName}>{item.description}</Text>
                 {item.details ? <Text style={s.itemDetail}>{item.details}</Text> : null}
               </View>
-              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{item.quantity}</Text>
+              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtQty(item.quantity)}</Text>
               <Text style={[s.colPrice, { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.unitPrice)}</Text>
               <Text style={[s.colAmt,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.amount)}</Text>
             </View>
@@ -316,13 +327,68 @@ export function OrderAcceptancePDF({ order, companyInfo }: Props) {
           </View>
         </View>
 
-        {order.notes ? (
+        {notes ? (
           <View style={s.section}>
             <Text style={s.sectionLabel}>備考</Text>
-            <View style={s.noteBox}><Text style={s.noteText}>{order.notes}</Text></View>
+            <View style={s.noteBox}><Text style={s.noteText}>{notes}</Text></View>
           </View>
         ) : null}
       </Page>
     </Document>
+  );
+}
+
+export function OrderAcceptancePDF({ order, companyInfo }: { order: OrderAcceptance; companyInfo?: CompanyInfo }) {
+  return (
+    <SimpleDocPDF
+      title="発注請書"
+      docNumber={order.orderNumber}
+      dateLabel="発注日"
+      date={order.orderDate}
+      customerName={order.customer?.companyName}
+      lead="下記の通り発注を承りました。"
+      infoRows={[
+        { label: '案件名', value: order.subject },
+        { label: '納期', value: fmtDate(order.deliveryDate) },
+        { label: '納入場所', value: order.deliveryPlace },
+        { label: '支払条件', value: order.paymentTerms },
+        ...(order.customFields ?? []).map(cf => ({ label: cf.label, value: cf.value })),
+      ]}
+      totalLabel="発注金額"
+      lineItems={order.lineItems}
+      subtotal={order.subtotal}
+      taxAmount={order.taxAmount}
+      discount={order.discount ?? 0}
+      total={order.totalAmount}
+      notes={order.notes}
+      companyInfo={companyInfo}
+    />
+  );
+}
+
+export function DeliveryNotePDF({ note, companyInfo }: { note: DeliveryNote; companyInfo?: CompanyInfo }) {
+  return (
+    <SimpleDocPDF
+      title="納品書"
+      docNumber={note.deliveryNumber}
+      dateLabel="納品日"
+      date={note.deliveryDate}
+      customerName={note.customer?.companyName}
+      lead="下記の通り納品致します。"
+      infoRows={[
+        { label: '案件名', value: note.subject },
+        { label: '納品日', value: fmtDate(note.deliveryDate) },
+        { label: '納入形式', value: note.deliveryFormat },
+        ...(note.customFields ?? []).map(cf => ({ label: cf.label, value: cf.value })),
+      ]}
+      totalLabel="納品金額"
+      lineItems={note.lineItems}
+      subtotal={note.subtotal}
+      taxAmount={note.taxAmount}
+      discount={note.discount ?? 0}
+      total={note.totalAmount}
+      notes={note.notes}
+      companyInfo={companyInfo}
+    />
   );
 }

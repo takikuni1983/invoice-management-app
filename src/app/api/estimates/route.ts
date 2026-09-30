@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
-import { generateEstimateNumber } from '@/lib/utils';
+import { resolveNumber, numberErrorResponse } from '@/lib/numbering';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -39,8 +39,7 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const last = await tx.estimate.findFirst({ orderBy: { estimateNumber: 'desc' } });
-    const estimateNumber = generateEstimateNumber(last?.estimateNumber ?? null);
+    const estimateNumber = await resolveNumber(tx, 'estimate', body.estimateNumber);
 
     const rate = Number(taxRate ?? 10);
     const items = buildLineItems(lineItems, rate);
@@ -69,7 +68,8 @@ export async function POST(req: NextRequest) {
         customFields: { orderBy: { sortOrder: 'asc' } },
       },
     });
-  });
+  }).catch(numberErrorResponse);
+  if (result instanceof Response) return result;
 
   return NextResponse.json(result, { status: 201 });
 }

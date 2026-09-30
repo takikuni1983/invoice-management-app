@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { resolveNumberForUpdate, numberErrorResponse } from '@/lib/numbering';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
 const include = {
@@ -21,6 +22,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { customerId, status, issueDate, dueDate, subject, notes, terms, bankInfo, taxRate, lineItems, paidAt, discount, customFields } = body;
 
   const result = await prisma.$transaction(async (tx) => {
+    const invoiceNumber = await resolveNumberForUpdate(tx, 'invoice', body.invoiceNumber, Number(id));
     await tx.invoiceLineItem.deleteMany({ where: { invoiceId: Number(id) } });
     await tx.invoiceCustomField.deleteMany({ where: { invoiceId: Number(id) } });
 
@@ -32,6 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return tx.invoice.update({
       where: { id: Number(id) },
       data: {
+        invoiceNumber,
         customerId: Number(customerId),
         status,
         issueDate: new Date(issueDate),
@@ -48,7 +51,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
       include,
     });
-  });
+  }).catch(numberErrorResponse);
+  if (result instanceof Response) return result;
 
   return NextResponse.json(result);
 }

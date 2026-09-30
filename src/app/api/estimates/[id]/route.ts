@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { resolveNumberForUpdate, numberErrorResponse } from '@/lib/numbering';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { customerId, status, issueDate, expiryDate, subject, projectName, notes, terms, taxRate, lineItems, discount, customFields } = body;
 
   const result = await prisma.$transaction(async (tx) => {
+    const estimateNumber = await resolveNumberForUpdate(tx, 'estimate', body.estimateNumber, Number(id));
     await tx.estimateLineItem.deleteMany({ where: { estimateId: Number(id) } });
     await tx.estimateCustomField.deleteMany({ where: { estimateId: Number(id) } });
 
@@ -33,6 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return tx.estimate.update({
       where: { id: Number(id) },
       data: {
+        estimateNumber,
         customerId: Number(customerId),
         status,
         issueDate: new Date(issueDate),
@@ -52,7 +55,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         customFields: { orderBy: { sortOrder: 'asc' } },
       },
     });
-  });
+  }).catch(numberErrorResponse);
+  if (result instanceof Response) return result;
 
   return NextResponse.json(result);
 }

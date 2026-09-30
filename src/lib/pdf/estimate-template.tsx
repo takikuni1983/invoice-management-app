@@ -79,7 +79,7 @@ const s = StyleSheet.create({
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
   // 幅0の基準点から絶対配置し、レイアウトに影響させない
   stampAnchor: { width: 0, height: 0 },
-  stampImage:  { position: 'absolute', left: -6, top: -12, width: 40, height: 40, objectFit: 'contain' },
+  stampImage:  { position: 'absolute', left: -6, top: -4, width: 40, height: 40, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -168,6 +168,9 @@ function fmtDate(d: Date | string | null | undefined) {
     const date = d instanceof Date ? d : parseISO(String(d));
     return format(date, 'yyyy/MM/dd');
   } catch { return String(d); }
+}
+function fmtQty(n: number) {
+  return new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 2 }).format(n);
 }
 function fmtNum(n: number) {
   return new Intl.NumberFormat('ja-JP').format(Math.round(n));
@@ -305,7 +308,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
                   <Text style={s.itemDetail}>{(item as any).details}</Text>
                 ) : null}
               </View>
-              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{item.quantity}</Text>
+              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtQty(item.quantity)}</Text>
               <Text style={[s.colPrice, { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.unitPrice)}</Text>
               <Text style={[s.colTax,   { fontFamily: 'Inter', fontSize: 8, color: C.gray }]}>
                 {(item.taxRate ?? 10) === 0 ? '-' : `${item.taxRate ?? 10}`}

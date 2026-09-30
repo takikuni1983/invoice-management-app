@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { renderToBuffer } from '@react-pdf/renderer';
-import { OrderAcceptancePDF } from '@/lib/pdf/simple-doc-template';
+import { DeliveryNotePDF } from '@/lib/pdf/simple-doc-template';
 import React from 'react';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [order, companyInfo] = await Promise.all([
-    prisma.orderAcceptance.findUnique({
+  const [note, companyInfo] = await Promise.all([
+    prisma.deliveryNote.findUnique({
       where: { id: Number(id) },
       include: {
         customer: true,
@@ -19,12 +19,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
   ]);
 
-  if (!order) return NextResponse.json({ error: '発注請書が見つかりません' }, { status: 404 });
+  if (!note) return NextResponse.json({ error: '納品書が見つかりません' }, { status: 404 });
 
   try {
     const buffer = await renderToBuffer(
-      React.createElement(OrderAcceptancePDF, {
-        order: order as any,
+      React.createElement(DeliveryNotePDF, {
+        note: note as any,
         companyInfo: companyInfo ?? undefined,
       }) as any
     );
@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${order.orderNumber}.pdf"`,
+        'Content-Disposition': `attachment; filename="${note.deliveryNumber}.pdf"`,
       },
     });
   } catch (err: any) {

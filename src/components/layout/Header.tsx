@@ -13,6 +13,10 @@ const pageTitles: Record<string, string> = {
   '/invoices/new': '請求書を新規作成',
   '/orders': '発注請書',
   '/orders/new': '発注請書を新規作成',
+  '/delivery-notes': '納品書',
+  '/delivery-notes/new': '納品書を新規作成',
+  '/sales': '売上管理',
+  '/items': '品目マスタ',
 };
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
@@ -27,6 +31,8 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       ? '請求書詳細'
       : pathname.includes('/orders/')
       ? '発注請書詳細'
+      : pathname.includes('/delivery-notes/')
+      ? '納品書詳細'
       : pathname.includes('/customers/')
       ? '顧客詳細'
       : '');

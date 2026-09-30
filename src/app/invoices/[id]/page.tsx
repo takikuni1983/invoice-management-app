@@ -6,7 +6,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import DeleteButton from '@/components/ui/DeleteButton';
 import FitToWidth from '@/components/ui/FitToWidth';
 import MarkPaidButton from '@/components/invoices/MarkPaidButton';
-import { Edit, Download } from 'lucide-react';
+import { Edit, Download, Truck } from 'lucide-react';
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,6 +18,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         customer: true,
         lineItems: { orderBy: { sortOrder: 'asc' } },
         customFields: { orderBy: { sortOrder: 'asc' } },
+        deliveryNotes: { select: { id: true, deliveryNumber: true }, orderBy: { createdAt: 'asc' } },
       },
     }),
     prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
@@ -45,6 +46,11 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h2 className="text-xl font-medium text-gray-900">{invoice.invoiceNumber}</h2>
           <StatusBadge status={invoice.status} type="invoice" />
+          {invoice.deliveryNotes.map((d) => (
+            <Link key={d.id} href={`/delivery-notes/${d.id}`} className="text-xs text-gray-500 hover:underline">
+              納品書: {d.deliveryNumber}
+            </Link>
+          ))}
         </div>
         <div className="flex flex-wrap gap-2">
           <a
@@ -53,6 +59,12 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           >
             <Download className="h-4 w-4" /> PDF
           </a>
+          <Link
+            href={`/delivery-notes/new?invoiceId=${invoice.id}`}
+            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
+          >
+            <Truck className="h-4 w-4" /> 納品書を作成
+          </Link>
           {invoice.status !== 'PAID' && (
             <MarkPaidButton invoiceId={invoice.id} />
           )}
@@ -188,7 +200,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                       </div>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>{item.quantity}</td>
+                  <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>{item.quantity.toLocaleString('ja-JP', { maximumFractionDigits: 2 })}</td>
                   <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>
                     {item.unitPrice.toLocaleString('ja-JP')}
                   </td>

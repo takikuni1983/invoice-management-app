@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Invoice, Customer } from '@/types';
 import LineItemsEditor, { LineItemRow, DEFAULT_TAX_RATE } from '@/components/line-items/LineItemsEditor';
+import DocNumberField from '@/components/forms/DocNumberField';
 import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFieldsEditor';
 import DiscountTotal from '@/components/forms/DiscountTotal';
 import { useMasterItems } from '@/components/forms/useMasterItems';
@@ -13,14 +14,17 @@ interface Props {
   invoice?: Invoice;
   customers: Customer[];
   defaultCustomerId?: number;
+  /** 新規作成時に自動で振られる予定の番号 */
+  suggestedNumber?: string;
 }
 
-export default function InvoiceForm({ invoice, customers, defaultCustomerId }: Props) {
+export default function InvoiceForm({ invoice, customers, defaultCustomerId, suggestedNumber }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
+    invoiceNumber: invoice?.invoiceNumber ?? '',
     customerId: invoice?.customerId ?? defaultCustomerId ?? '',
     status: invoice?.status ?? 'DRAFT',
     issueDate: formatDateInput(invoice?.issueDate) || new Date().toISOString().slice(0, 10),
@@ -95,6 +99,14 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">基本情報</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2 sm:w-1/2 sm:pr-2">
+            <DocNumberField
+              label="請求番号"
+              value={form.invoiceNumber}
+              onChange={(value) => setForm((f) => ({ ...f, invoiceNumber: value }))}
+              suggested={suggestedNumber}
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               顧客 <span className="text-red-500">*</span>

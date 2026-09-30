@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { OrderAcceptance, Customer } from '@/types';
 import LineItemsEditor, { LineItemRow, DEFAULT_TAX_RATE } from '@/components/line-items/LineItemsEditor';
+import DocNumberField from '@/components/forms/DocNumberField';
 import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFieldsEditor';
 import DiscountTotal from '@/components/forms/DiscountTotal';
 import { useMasterItems } from '@/components/forms/useMasterItems';
@@ -16,18 +17,21 @@ interface Props {
   order?: OrderFormInitial;
   customers: Customer[];
   defaultCustomerId?: number;
+  /** 新規作成時に自動で振られる予定の番号 */
+  suggestedNumber?: string;
 }
 
 const inputClass =
   'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
-export default function OrderForm({ order, customers, defaultCustomerId }: Props) {
+export default function OrderForm({ order, customers, defaultCustomerId, suggestedNumber }: Props) {
   const router = useRouter();
   const isEdit = order?.id != null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
+    orderNumber: order?.orderNumber ?? '',
     customerId: order?.customerId ?? defaultCustomerId ?? '',
     status: order?.status ?? 'DRAFT',
     orderDate: formatDateInput(order?.orderDate) || new Date().toISOString().slice(0, 10),
@@ -105,6 +109,14 @@ export default function OrderForm({ order, customers, defaultCustomerId }: Props
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">基本情報</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2 sm:w-1/2 sm:pr-2">
+            <DocNumberField
+              label="番号"
+              value={form.orderNumber}
+              onChange={(value) => setForm((f) => ({ ...f, orderNumber: value }))}
+              suggested={suggestedNumber}
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               発注元（顧客） <span className="text-red-500">*</span>

@@ -12,15 +12,19 @@ import {
   Settings,
   ClipboardCheck,
   X,
+  Truck,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
+  { href: '/sales', label: '売上管理', icon: BarChart3 },
   { href: '/customers', label: '顧客管理', icon: Users },
   { href: '/estimates', label: '見積書', icon: FileText },
   { href: '/orders', label: '発注請書', icon: ClipboardCheck },
   { href: '/invoices', label: '請求書', icon: Receipt },
+  { href: '/delivery-notes', label: '納品書', icon: Truck },
   { href: '/items', label: '品目マスタ', icon: Package },
   { href: '/settings', label: '設定', icon: Settings },
 ];

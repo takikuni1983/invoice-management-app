@@ -11,43 +11,41 @@ const include = {
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const order = await prisma.orderAcceptance.findUnique({ where: { id: Number(id) }, include });
-  if (!order) return NextResponse.json({ error: '発注請書が見つかりません' }, { status: 404 });
-  return NextResponse.json(order);
+  const note = await prisma.deliveryNote.findUnique({ where: { id: Number(id) }, include });
+  if (!note) return NextResponse.json({ error: '納品書が見つかりません' }, { status: 404 });
+  return NextResponse.json(note);
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
   const {
-    customerId, status, orderDate, subject, deliveryDate, deliveryPlace,
-    paymentTerms, notes, lineItems, discount, customFields,
+    customerId, status, deliveryDate, subject, deliveryFormat,
+    notes, lineItems, discount, customFields,
   } = body;
 
-  if (!customerId || !orderDate) {
-    return NextResponse.json({ error: '顧客と発注日は必須です' }, { status: 400 });
+  if (!customerId || !deliveryDate) {
+    return NextResponse.json({ error: '顧客と納品日は必須です' }, { status: 400 });
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const orderNumber = await resolveNumberForUpdate(tx, 'order', body.orderNumber, Number(id));
-    await tx.orderAcceptanceLineItem.deleteMany({ where: { orderId: Number(id) } });
-    await tx.orderAcceptanceCustomField.deleteMany({ where: { orderId: Number(id) } });
+    const deliveryNumber = await resolveNumberForUpdate(tx, 'delivery', body.deliveryNumber, Number(id));
+    await tx.deliveryNoteLineItem.deleteMany({ where: { deliveryNoteId: Number(id) } });
+    await tx.deliveryNoteCustomField.deleteMany({ where: { deliveryNoteId: Number(id) } });
 
     const items = buildLineItems(lineItems);
     const totals = calcTotals(items, discount);
     const fields = buildCustomFields(customFields);
 
-    return tx.orderAcceptance.update({
+    return tx.deliveryNote.update({
       where: { id: Number(id) },
       data: {
-        orderNumber,
+        deliveryNumber,
         customerId: Number(customerId),
         status,
-        orderDate: new Date(orderDate),
+        deliveryDate: new Date(deliveryDate),
         subject: subject ?? '',
-        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
-        deliveryPlace: deliveryPlace ?? '',
-        paymentTerms: paymentTerms ?? '',
+        deliveryFormat: deliveryFormat ?? '',
         notes: notes ?? '',
         ...totals,
         lineItems: { create: items },
@@ -63,6 +61,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.orderAcceptance.delete({ where: { id: Number(id) } });
+  await prisma.deliveryNote.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
 }

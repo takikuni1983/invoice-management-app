@@ -192,7 +192,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
                       </div>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>{item.quantity}</td>
+                  <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>{item.quantity.toLocaleString('ja-JP', { maximumFractionDigits: 2 })}</td>
                   <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>
                     {item.unitPrice.toLocaleString('ja-JP')}
                   </td>
