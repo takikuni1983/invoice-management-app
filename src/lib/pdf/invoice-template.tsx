@@ -57,7 +57,7 @@ const s = StyleSheet.create({
     color: C.title,
     letterSpacing: 3,
     marginTop: 4,
-    marginBottom: 18,
+    marginBottom: 30,
   },
 
   twoCol:   { flexDirection: 'row', marginBottom: 18 },
@@ -65,20 +65,20 @@ const s = StyleSheet.create({
   rightCol: { width: 170 },
 
   toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
-  toCompany: { fontSize: 8.5, fontWeight: 500, color: C.base, marginBottom: 18 },
+  toCompany: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 18 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
   cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
   cfColon: { width: 10, fontSize: 8, color: C.title, lineHeight: 1.6 },
-  cfValue: { flex: 1, fontSize: 8.5, fontWeight: 500, color: C.base, lineHeight: 1.6 },
+  cfValue: { flex: 1, fontSize: 9.5, fontWeight: 500, color: C.base, lineHeight: 1.6 },
 
   companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
   companyLine: { fontSize: 7.5, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
 
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
-  // 幅0の基準点から絶対配置し、レイアウトに影響させない
-  stampAnchor: { width: 0, height: 0 },
-  stampImage:  { position: 'absolute', left: -6, top: -4, width: 40, height: 40, objectFit: 'contain' },
+  // 自社情報欄の右端を基準に絶対配置（氏名の末尾に少しかぶせる・レイアウトに影響させない）
+  // right: -14 で用紙の端から約9mm内側に収める（プリンタの印刷可能範囲）
+  stampImage:  { position: 'absolute', right: -14, top: 2, width: 60, height: 60, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -255,9 +255,7 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
                     {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
                   </Text>
                   {companyInfo.stampImage ? (
-                    <View style={s.stampAnchor}>
-                      <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
-                    </View>
+                    <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
                   ) : null}
                 </View>
                 {companyInfo.postalCode && <Text style={s.companyLine}>{companyInfo.postalCode}</Text>}
