@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Plus, Trash2 } from 'lucide-react';
 import { Estimate, Customer } from '@/types';
 import LineItemsEditor, { LineItemRow } from '@/components/line-items/LineItemsEditor';
-import { formatDateInput, ESTIMATE_STATUS_LABELS } from '@/lib/utils';
+import { formatDateInput, ESTIMATE_STATUS_LABELS, formatCurrency } from '@/lib/utils';
+
+interface CustomFieldRow { label: string; value: string; }
 
 interface Props {
   estimate?: Estimate;
@@ -26,20 +29,70 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
     notes: estimate?.notes ?? '',
     terms: estimate?.terms ?? '',
   });
-  const [taxRate, setTaxRate] = useState(estimate?.taxRate ?? 10);
+
+  const [discount, setDiscount] = useState(estimate?.discount ?? 0);
+
   const [lineItems, setLineItems] = useState<LineItemRow[]>(
     estimate?.lineItems.map((li) => ({
       description: li.description,
+      details: (li as any).details ?? '',
       quantity: li.quantity,
       unit: li.unit ?? '',
       unitPrice: li.unitPrice,
       amount: li.amount,
-    })) ?? [{ description: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0 }]
+      taxRate: li.taxRate ?? 10,
+    })) ?? [{ description: '', details: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0, taxRate: 10 }]
   );
+
+  const [customFields, setCustomFields] = useState<CustomFieldRow[]>(
+    estimate?.customFields?.map(cf => ({ label: cf.label, value: cf.value })) ?? []
+  );
+  const [fieldLabels, setFieldLabels] = useState<string[]>([]);
+  const [masterItems, setMasterItems] = useState<string[]>([]);
+
+  const loadFieldLabels = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings/fields');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) setFieldLabels(data.map((d: any) => d.label));
+    } catch {}
+  }, []);
+
+  const loadMasterItems = useCallback(async () => {
+    try {
+      const res = await fetch('/api/items');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data)) setMasterItems(data.map((d: any) => d.name));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    loadFieldLabels();
+    loadMasterItems();
+  }, [loadFieldLabels, loadMasterItems]);
 
   const set = (field: string) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  function addCustomField(label: string) {
+    if (!label || customFields.some(cf => cf.label === label)) return;
+    setCustomFields(prev => [...prev, { label, value: '' }]);
+  }
+
+  function updateCustomField(index: number, value: string) {
+    setCustomFields(prev => prev.map((cf, i) => i === index ? { ...cf, value } : cf));
+  }
+
+  function removeCustomField(index: number) {
+    setCustomFields(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
+  const taxAmount = lineItems.reduce((sum, item) => sum + Math.round(item.amount * item.taxRate / 100), 0);
+  const total = subtotal + taxAmount - discount;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +104,12 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, taxRate, lineItems }),
+        body: JSON.stringify({
+          ...form,
+          lineItems,
+          discount,
+          customFields: customFields.map((cf, i) => ({ ...cf, sortOrder: i })),
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -67,13 +125,15 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
     }
   }
 
+  const unusedLabels = fieldLabels.filter(l => !customFields.some(cf => cf.label === l));
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">{error}</div>
       )}
 
-      {/* ヘッダー情報 */}
+      {/* 基本情報 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">基本情報</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -136,17 +196,73 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
             />
           </div>
         </div>
+
+        {/* カスタム項目 */}
+        {(customFields.length > 0 || unusedLabels.length > 0) && (
+          <div className="pt-2 space-y-2">
+            <p className="text-sm font-medium text-gray-700">カスタム項目</p>
+            {customFields.map((cf, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 w-32 shrink-0">{cf.label}</span>
+                <input
+                  value={cf.value}
+                  onChange={(e) => updateCustomField(i, e.target.value)}
+                  placeholder={cf.label}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button type="button" onClick={() => removeCustomField(i)} className="p-1 text-gray-400 hover:text-red-500">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            {unusedLabels.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {unusedLabels.map(label => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => addCustomField(label)}
+                    className="flex items-center gap-1 text-xs px-2 py-1 border border-dashed border-blue-400 text-blue-600 rounded hover:bg-blue-50"
+                  >
+                    <Plus className="h-3 w-3" /> {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 明細行 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">明細</h3>
-        <LineItemsEditor
-          items={lineItems}
-          taxRate={taxRate}
-          onChange={setLineItems}
-          onTaxRateChange={setTaxRate}
-        />
+        <LineItemsEditor items={lineItems} onChange={setLineItems} masterItems={masterItems} />
+
+        {/* 値引き */}
+        <div className="mt-4 flex justify-end">
+          <div className="w-64 space-y-1 text-sm">
+            {discount > 0 && (
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-600">値引き</span>
+                <span>-{formatCurrency(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center py-1">
+              <label className="text-gray-600 text-sm">値引き額</label>
+              <input
+                type="number"
+                min="0"
+                value={discount}
+                onChange={e => setDiscount(Number(e.target.value) || 0)}
+                className="w-32 text-right border border-gray-300 rounded px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex justify-between py-1 font-bold text-base border-t border-gray-200 pt-2">
+              <span>総額</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 備考・条件 */}

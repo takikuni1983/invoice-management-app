@@ -23,10 +23,11 @@ export function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
-export function formatDateInput(dateStr: string | null | undefined): string {
-  if (!dateStr) return '';
+export function formatDateInput(d: Date | string | null | undefined): string {
+  if (!d) return '';
   try {
-    return format(parseISO(dateStr), 'yyyy-MM-dd');
+    const date = d instanceof Date ? d : parseISO(String(d));
+    return format(date, 'yyyy-MM-dd');
   } catch {
     return '';
   }
@@ -46,8 +47,10 @@ export function generateInvoiceNumber(lastNumber: string | null): string {
 
 export const ESTIMATE_STATUS_LABELS: Record<string, string> = {
   DRAFT: '下書き',
-  SENT: '送付済み',
+  SENT: '送信済み',
   APPROVED: '承認済み',
+  INVOICED: '請求済み',
+  EXPIRED: '期限切れ',
   REJECTED: '却下',
 };
 
@@ -62,6 +65,8 @@ export const ESTIMATE_STATUS_COLORS: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-700',
   SENT: 'bg-blue-100 text-blue-700',
   APPROVED: 'bg-green-100 text-green-700',
+  INVOICED: 'bg-purple-100 text-purple-700',
+  EXPIRED: 'bg-orange-100 text-orange-700',
   REJECTED: 'bg-red-100 text-red-700',
 };
 

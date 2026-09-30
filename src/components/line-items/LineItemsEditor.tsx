@@ -5,20 +5,23 @@ import { formatCurrency, TAX_RATES } from '@/lib/utils';
 
 export interface LineItemRow {
   description: string;
+  details?: string;
   quantity: number;
   unit: string;
   unitPrice: number;
   amount: number;
+  taxRate: number;
 }
 
 interface Props {
   items: LineItemRow[];
-  taxRate: number;
   onChange: (items: LineItemRow[]) => void;
-  onTaxRateChange: (rate: number) => void;
+  masterItems?: string[];
 }
 
-export default function LineItemsEditor({ items, taxRate, onChange, onTaxRateChange }: Props) {
+const DATALIST_ID = 'item-master-list';
+
+export default function LineItemsEditor({ items, onChange, masterItems = [] }: Props) {
   function updateItem(index: number, field: keyof LineItemRow, value: string | number) {
     const updated = items.map((item, i) => {
       if (i !== index) return item;
@@ -32,7 +35,7 @@ export default function LineItemsEditor({ items, taxRate, onChange, onTaxRateCha
   }
 
   function addItem() {
-    onChange([...items, { description: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0 }]);
+    onChange([...items, { description: '', details: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0, taxRate: 10 }]);
   }
 
   function removeItem(index: number) {
@@ -40,64 +43,99 @@ export default function LineItemsEditor({ items, taxRate, onChange, onTaxRateCha
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
-  const taxAmount = Math.round(subtotal * taxRate / 100);
+  const taxAmount = items.reduce((sum, item) => sum + Math.round(item.amount * item.taxRate / 100), 0);
   const total = subtotal + taxAmount;
 
   return (
     <div>
-      <div className="border border-gray-200 rounded-md overflow-hidden">
+      {/* 品目マスタ datalist */}
+      {masterItems.length > 0 && (
+        <datalist id={DATALIST_ID}>
+          {masterItems.map(name => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
+      )}
+
+      <div className="border rounded-md overflow-hidden" style={{ borderColor: '#e3e3e3' }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-3 py-2 font-medium text-gray-600">品目・内容</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600 w-20">数量</th>
-              <th className="text-center px-3 py-2 font-medium text-gray-600 w-20">単位</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600 w-32">単価</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600 w-32">金額</th>
+            <tr style={{ backgroundColor: '#3c3d3a' }}>
+              <th className="text-left px-3 py-2 font-bold text-white text-[9pt]">品目・内容</th>
+              <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-20">数量</th>
+              <th className="text-center px-3 py-2 font-bold text-white text-[9pt] w-16">単位</th>
+              <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-28">単価</th>
+              <th className="text-center px-3 py-2 font-bold text-white text-[9pt] w-20">税率</th>
+              <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-28">金額</th>
               <th className="w-8"></th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, i) => (
-              <tr key={i} className="border-b border-gray-100">
-                <td className="px-2 py-1.5">
+              <tr
+                key={i}
+                className="border-b align-top"
+                style={{ borderColor: '#e3e3e3', backgroundColor: i % 2 === 1 ? '#F9FAFB' : '#FFFFFF' }}
+              >
+                <td className="px-2 py-2">
                   <input
+                    list={masterItems.length > 0 ? DATALIST_ID : undefined}
                     value={item.description}
                     onChange={(e) => updateItem(i, 'description', e.target.value)}
-                    placeholder="品目名"
-                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5"
+                    placeholder="品目名（マスタから選択または入力）"
+                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
+                  />
+                  <textarea
+                    value={item.details ?? ''}
+                    onChange={(e) => updateItem(i, 'details', e.target.value)}
+                    placeholder="注釈（任意）"
+                    rows={1}
+                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 resize-none mt-0.5"
+                    style={{ fontSize: '7pt', color: '#727272' }}
                   />
                 </td>
-                <td className="px-2 py-1.5">
+                <td className="px-2 py-2">
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={item.quantity}
                     onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
-                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5"
+                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
                   />
                 </td>
-                <td className="px-2 py-1.5">
+                <td className="px-2 py-2">
                   <input
                     value={item.unit}
                     onChange={(e) => updateItem(i, 'unit', e.target.value)}
-                    className="w-full text-center border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5"
+                    className="w-full text-center border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
                   />
                 </td>
-                <td className="px-2 py-1.5">
+                <td className="px-2 py-2">
                   <input
                     type="number"
                     min="0"
                     value={item.unitPrice}
                     onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
-                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5"
+                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
                   />
                 </td>
-                <td className="px-3 py-1.5 text-right text-gray-700">
+                <td className="px-2 py-2">
+                  <select
+                    value={item.taxRate}
+                    onChange={(e) => updateItem(i, 'taxRate', Number(e.target.value))}
+                    className="w-full border rounded text-center text-xs px-1 py-0.5"
+                    style={{ borderColor: '#e3e3e3' }}
+                  >
+                    {TAX_RATES.map((r) => (
+                      <option key={r} value={r}>{r}%</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-3 py-2 text-right text-[8pt]">
                   {formatCurrency(item.amount)}
                 </td>
-                <td className="px-1 py-1.5">
+                <td className="px-1 py-2">
                   <button
                     type="button"
                     onClick={() => removeItem(i)}
@@ -110,7 +148,7 @@ export default function LineItemsEditor({ items, taxRate, onChange, onTaxRateCha
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-gray-400 text-sm">
+                <td colSpan={7} className="text-center py-6 text-gray-400 text-sm">
                   明細行がありません。「行を追加」をクリックしてください。
                 </td>
               </tr>
@@ -129,27 +167,16 @@ export default function LineItemsEditor({ items, taxRate, onChange, onTaxRateCha
 
       {/* 合計エリア */}
       <div className="mt-4 flex justify-end">
-        <div className="w-64 space-y-1 text-sm">
-          <div className="flex justify-between py-1 border-b border-gray-100">
-            <span className="text-gray-600">小計</span>
+        <div className="w-64 text-sm">
+          <div className="flex justify-between py-2 border-b" style={{ borderColor: '#e3e3e3' }}>
+            <span className="text-gray-500">小計</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
-          <div className="flex justify-between items-center py-1 border-b border-gray-100">
-            <div className="flex items-center gap-1 text-gray-600">
-              消費税
-              <select
-                value={taxRate}
-                onChange={(e) => onTaxRateChange(Number(e.target.value))}
-                className="border border-gray-200 rounded text-xs px-1 py-0.5"
-              >
-                {TAX_RATES.map((r) => (
-                  <option key={r} value={r}>{r}%</option>
-                ))}
-              </select>
-            </div>
+          <div className="flex justify-between items-center py-2 border-b" style={{ borderColor: '#e3e3e3' }}>
+            <span className="text-gray-500">消費税（各行の税率）</span>
             <span>{formatCurrency(taxAmount)}</span>
           </div>
-          <div className="flex justify-between py-1 font-bold text-base">
+          <div className="flex justify-between py-2 font-bold text-base">
             <span>合計</span>
             <span>{formatCurrency(total)}</span>
           </div>

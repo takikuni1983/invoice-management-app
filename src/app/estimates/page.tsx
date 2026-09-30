@@ -8,9 +8,9 @@ import DeleteButton from '@/components/ui/DeleteButton';
 const STATUS_TABS = [
   { value: '', label: 'すべて' },
   { value: 'DRAFT', label: '下書き' },
-  { value: 'SENT', label: '送付済み' },
+  { value: 'SENT', label: '送信済み' },
   { value: 'APPROVED', label: '承認済み' },
-  { value: 'REJECTED', label: '却下' },
+  { value: 'INVOICED', label: '請求済み' },
 ];
 
 export default async function EstimatesPage({

@@ -4,9 +4,21 @@ import './globals.css';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 
-const notoSansJP = localFont({
-  src: '../../public/fonts/NotoSansJP-Regular.otf',
-  variable: '--font-noto-sans-jp',
+const inter = localFont({
+  src: [
+    { path: '../../public/fonts/InterVariable.ttf', style: 'normal' },
+    { path: '../../public/fonts/InterVariable-Italic.ttf', style: 'italic' },
+  ],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const ibmPlex = localFont({
+  src: [
+    { path: '../../public/fonts/IBMPlexSansJP-Regular.ttf', weight: '400' },
+    { path: '../../public/fonts/IBMPlexSansJP-Medium.ttf', weight: '500' },
+  ],
+  variable: '--font-ibm',
   display: 'swap',
 });
 
@@ -22,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${notoSansJP.variable} font-sans antialiased bg-gray-50`}>
+      <body className={`${inter.variable} ${ibmPlex.variable} font-sans antialiased bg-gray-50`}>
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0">

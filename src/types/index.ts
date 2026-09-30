@@ -1,4 +1,4 @@
-export type EstimateStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED';
+export type EstimateStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'INVOICED';
 export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE';
 
 export interface Customer {
@@ -25,6 +25,7 @@ export interface LineItem {
   unit?: string;
   unitPrice: number;
   amount: number;
+  taxRate?: number;
 }
 
 export interface Estimate {
@@ -42,7 +43,9 @@ export interface Estimate {
   taxRate: number;
   taxAmount: number;
   totalAmount: number;
+  discount: number;
   lineItems: LineItem[];
+  customFields?: { id?: number; label: string; value: string; sortOrder: number }[];
   createdAt: string;
   updatedAt: string;
 }

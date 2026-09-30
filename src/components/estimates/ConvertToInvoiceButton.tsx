@@ -9,7 +9,7 @@ export default function ConvertToInvoiceButton({ estimateId }: { estimateId: num
   const [loading, setLoading] = useState(false);
 
   async function handleConvert() {
-    if (!confirm('この見積書を請求書に変換しますか？見積書のステータスが「承認済み」になります。')) return;
+    if (!confirm('この見積書を請求書に変換しますか？見積書のステータスが「請求済み」になります。')) return;
     setLoading(true);
     try {
       // Fetch estimate data first

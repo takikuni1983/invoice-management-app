@@ -7,7 +7,11 @@ export default async function EditEstimatePage({ params }: { params: Promise<{ i
   const [estimate, customers] = await Promise.all([
     prisma.estimate.findUnique({
       where: { id: Number(id) },
-      include: { customer: true, lineItems: { orderBy: { sortOrder: 'asc' } } },
+      include: {
+        customer: true,
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        customFields: { orderBy: { sortOrder: 'asc' } },
+      },
     }),
     prisma.customer.findMany({ orderBy: { companyName: 'asc' } }),
   ]);
