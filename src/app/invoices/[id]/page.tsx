@@ -9,18 +9,39 @@ import { Edit, Download } from 'lucide-react';
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: Number(id) },
-    include: { customer: true, lineItems: { orderBy: { sortOrder: 'asc' } } },
-  });
+
+  const [invoice, companyInfo] = await Promise.all([
+    prisma.invoice.findUnique({
+      where: { id: Number(id) },
+      include: {
+        customer: true,
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+      },
+    }),
+    prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
+  ]);
 
   if (!invoice) notFound();
 
+  const subtotal = invoice.subtotal;
+  const taxAmount = invoice.taxAmount;
+  const discount = (invoice as any).discount ?? 0;
+  const total = invoice.totalAmount;
+
+  const taxByRate: Record<number, number> = {};
+  invoice.lineItems.forEach((item: any) => {
+    const rate = item.taxRate ?? 10;
+    taxByRate[rate] = (taxByRate[rate] ?? 0) + Math.round(item.amount * rate / 100);
+  });
+  const taxRates = Object.keys(taxByRate).map(Number).filter(r => r > 0);
+  const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
+
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-4">
+      {/* アクションバー */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-gray-900">{invoice.invoiceNumber}</h2>
+          <h2 className="text-xl font-medium text-gray-900">{invoice.invoiceNumber}</h2>
           <StatusBadge status={invoice.status} type="invoice" />
         </div>
         <div className="flex gap-2">
@@ -43,103 +64,174 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <p className="text-xs text-gray-500 mb-1">請求先</p>
-            <p className="font-semibold text-gray-900">{invoice.customer.companyName}</p>
-            <p className="text-sm text-gray-600">{invoice.customer.contactName} 様</p>
-            {invoice.customer.phone && <p className="text-sm text-gray-500">TEL: {invoice.customer.phone}</p>}
-          </div>
-          <div className="text-sm space-y-1">
-            <div className="flex justify-between">
-              <span className="text-gray-500">請求番号</span>
-              <span className="font-medium">{invoice.invoiceNumber}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">発行日</span>
-              <span>{formatDate(invoice.issueDate.toISOString())}</span>
-            </div>
-            {invoice.dueDate && (
-              <div className="flex justify-between">
-                <span className="text-gray-500">支払期限</span>
-                <span>{formatDate(invoice.dueDate.toISOString())}</span>
-              </div>
-            )}
-            {invoice.paidAt && (
-              <div className="flex justify-between">
-                <span className="text-gray-500">入金日</span>
-                <span className="text-green-600 font-medium">{formatDate(invoice.paidAt.toISOString())}</span>
-              </div>
-            )}
+      <div className="bg-white rounded-lg border border-gray-200 p-8">
+
+        {/* 右上: 請求番号・発行日 */}
+        <div className="flex justify-end mb-2">
+          <div className="text-right">
+            <p className="font-medium text-sm">{invoice.invoiceNumber}</p>
+            <p className="text-xs text-gray-500">{formatDate(invoice.issueDate.toISOString())}</p>
           </div>
         </div>
 
-        {invoice.subject && (
-          <div>
-            <p className="text-xs text-gray-500 mb-1">件名</p>
-            <p className="font-medium">{invoice.subject}</p>
-          </div>
-        )}
+        {/* タイトル */}
+        <h1 className="text-3xl font-medium text-center mb-6" style={{ color: '#817D7D', letterSpacing: '0.15em' }}>請求書</h1>
 
-        <div>
-          <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-3 py-2 font-medium text-gray-600">品目・内容</th>
-                <th className="text-right px-3 py-2 font-medium text-gray-600 w-16">数量</th>
-                <th className="text-center px-3 py-2 font-medium text-gray-600 w-16">単位</th>
-                <th className="text-right px-3 py-2 font-medium text-gray-600 w-28">単価</th>
-                <th className="text-right px-3 py-2 font-medium text-gray-600 w-28">金額</th>
+        {/* ヘッダー + 総額バーを1つのflex行にまとめる */}
+        <div className="flex gap-12 mb-10">
+          {/* 左カラム: 請求先 + 件名 + 支払期限 + 総額バー */}
+          <div style={{ flex: '0 1 55%' }} className="flex flex-col">
+            <div className="flex-1">
+              <p className="text-xs mb-1" style={{ color: '#817D7D' }}>請求先</p>
+              <p className="text-sm font-medium mb-3">{invoice.customer.companyName} 御中</p>
+
+              {invoice.dueDate && (
+                <div className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>支払期限</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium">{formatDate(invoice.dueDate.toISOString())}</span>
+                </div>
+              )}
+
+              {invoice.paidAt && (
+                <div className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>入金日</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium text-green-600">{formatDate(invoice.paidAt.toISOString())}</span>
+                </div>
+              )}
+
+              {invoice.subject && (
+                <div className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>件名</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium">{invoice.subject}</span>
+                </div>
+              )}
+            </div>
+
+            {/* 総額バー */}
+            <div className="flex justify-between items-center border-b-2 border-gray-400 py-2 mt-4">
+              <span className="text-sm text-gray-500">総額</span>
+              <span className="text-xl font-medium">{formatCurrency(total)}</span>
+            </div>
+          </div>
+
+          {/* 右カラム: 自社情報 + 電子印鑑 + 印鑑枠 */}
+          <div className="flex-1 flex flex-col justify-between text-sm">
+            <div>
+              {companyInfo?.companyName && (
+                <div className="space-y-1 mb-2">
+                  <p className="font-medium">{companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}</p>
+                  {companyInfo.postalCode    && <p className="text-xs text-gray-500">{companyInfo.postalCode}</p>}
+                  {companyInfo.address       && <p className="text-xs text-gray-500">{companyInfo.address}</p>}
+                  {companyInfo.phone         && <p className="text-xs text-gray-500">電話番号 : {companyInfo.phone}</p>}
+                  {companyInfo.registrationNumber && (
+                    <p className="text-xs text-gray-500">登録番号 : {companyInfo.registrationNumber}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* 印鑑枠（電子印鑑 or 空枠×3） */}
+            <div className="flex gap-1 mt-2">
+              {companyInfo?.stampImage ? (
+                <>
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                  <div className="flex-1 border border-gray-300 flex items-center justify-center p-0.5" style={{ height: '44px' }}>
+                    <img src={(companyInfo as any).stampImage} alt="印鑑" className="max-h-full max-w-full object-contain" />
+                  </div>
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 明細テーブル */}
+        <table className="w-full text-sm mb-2">
+          <thead>
+            <tr style={{ backgroundColor: '#3c3d3a' }}>
+              <th className="text-left px-3 py-2 font-medium text-white" style={{ fontSize: '9pt' }}>項目 &amp; 詳細</th>
+              <th className="text-right px-3 py-2 font-medium text-white w-16" style={{ fontSize: '9pt' }}>数量</th>
+              <th className="text-right px-3 py-2 font-medium text-white w-24" style={{ fontSize: '9pt' }}>単価</th>
+              <th className="text-right px-3 py-2 font-medium text-white w-20" style={{ fontSize: '9pt' }}>税(%)</th>
+              <th className="text-right px-3 py-2 font-medium text-white w-28" style={{ fontSize: '9pt' }}>総額</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoice.lineItems.map((item) => (
+              <tr key={item.id} className="border-b bg-white" style={{ borderColor: '#e3e3e3' }}>
+                <td className="px-3 py-3">
+                  <div className="font-medium" style={{ fontSize: '8pt' }}>{item.description}</div>
+                  {(item as any).details && (
+                    <div className="mt-1 leading-relaxed" style={{ fontSize: '7pt', color: '#727272' }}>
+                      {(item as any).details}
+                    </div>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>{item.quantity}</td>
+                <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>
+                  {item.unitPrice.toLocaleString('ja-JP')}
+                </td>
+                <td className="px-3 py-3 text-right" style={{ fontSize: '8pt', color: '#727272' }}>
+                  {((item as any).taxRate ?? 10) === 0 ? '-' : `${(item as any).taxRate ?? 10}`}
+                </td>
+                <td className="px-3 py-3 text-right font-medium" style={{ fontSize: '8pt' }}>
+                  {item.amount.toLocaleString('ja-JP')}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {invoice.lineItems.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100">
-                  <td className="px-3 py-2">{item.description}</td>
-                  <td className="px-3 py-2 text-right">{item.quantity}</td>
-                  <td className="px-3 py-2 text-center text-gray-500">{item.unit}</td>
-                  <td className="px-3 py-2 text-right">{formatCurrency(item.unitPrice)}</td>
-                  <td className="px-3 py-2 text-right font-medium">{formatCurrency(item.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
 
-          <div className="mt-4 flex justify-end">
-            <div className="w-56 space-y-1 text-sm">
-              <div className="flex justify-between py-1 border-b border-gray-100">
-                <span className="text-gray-500">小計</span>
-                <span>{formatCurrency(invoice.subtotal)}</span>
+        {/* 集計 */}
+        <div className="flex justify-end mt-2">
+          <div style={{ minWidth: '16rem' }}>
+            <div className="flex justify-between py-1.5 text-xs">
+              <span className="pr-6" style={{ color: '#727272' }}>小計</span>
+              <span className="pr-3">{subtotal.toLocaleString('ja-JP')}</span>
+            </div>
+            <div className="flex justify-between py-1.5 text-xs">
+              <span className="pr-6" style={{ color: '#727272' }}>{taxLabel}</span>
+              <span className="pr-3">{taxAmount.toLocaleString('ja-JP')}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between py-1.5 text-xs">
+                <span className="pr-6" style={{ color: '#727272' }}>値引き</span>
+                <span className="pr-3">(-) {discount.toLocaleString('ja-JP')}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-gray-100">
-                <span className="text-gray-500">消費税 ({invoice.taxRate}%)</span>
-                <span>{formatCurrency(invoice.taxAmount)}</span>
-              </div>
-              <div className="flex justify-between py-1 font-bold text-base">
-                <span>合計</span>
-                <span>{formatCurrency(invoice.totalAmount)}</span>
-              </div>
+            )}
+            <div className="flex justify-between py-2 px-3 font-medium mt-1 text-sm" style={{ backgroundColor: '#eeeeee' }}>
+              <span>総額</span>
+              <span>¥{total.toLocaleString('ja-JP')}</span>
             </div>
           </div>
         </div>
 
+        {/* 振込先 */}
         {invoice.bankInfo && (
-          <div>
-            <p className="text-xs text-gray-500 mb-1">振込先</p>
-            <p className="text-sm bg-blue-50 rounded p-3">{invoice.bankInfo}</p>
+          <div className="mt-6">
+            <p className="text-xs border-b pb-1 mb-2" style={{ color: '#817D7D', borderColor: '#e3e3e3' }}>振込先</p>
+            <p className="text-sm bg-blue-50 rounded p-3 leading-relaxed">{invoice.bankInfo}</p>
           </div>
         )}
+        {/* 備考・取引条件 */}
         {invoice.notes && (
-          <div>
-            <p className="text-xs text-gray-500 mb-1">備考</p>
-            <p className="text-sm bg-gray-50 rounded p-3">{invoice.notes}</p>
+          <div className="mt-4">
+            <p className="text-xs border-b pb-1 mb-2" style={{ color: '#817D7D', borderColor: '#e3e3e3' }}>備考</p>
+            <p className="text-sm bg-gray-50 rounded p-3 leading-relaxed">{invoice.notes}</p>
           </div>
         )}
         {invoice.terms && (
-          <div>
-            <p className="text-xs text-gray-500 mb-1">取引条件</p>
-            <p className="text-sm">{invoice.terms}</p>
+          <div className="mt-4">
+            <p className="text-xs border-b pb-1 mb-2" style={{ color: '#817D7D', borderColor: '#e3e3e3' }}>取引条件</p>
+            <p className="text-sm leading-relaxed">{invoice.terms}</p>
           </div>
         )}
       </div>

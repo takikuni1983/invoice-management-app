@@ -37,14 +37,6 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
   const taxRates = Object.keys(taxByRate).map(Number).filter(r => r > 0);
   const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
 
-  const cf = (item: any) => (
-    <div className="flex gap-2 mb-2 text-sm">
-      <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>{item.label ?? item.name}</span>
-      <span className="text-gray-300 shrink-0">:</span>
-      <span className="font-medium">{item.value ?? item.text}</span>
-    </div>
-  );
-
   return (
     <div className="max-w-3xl space-y-4">
       {/* アクションバー */}
@@ -86,71 +78,80 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         {/* タイトル */}
         <h1 className="text-3xl font-medium text-center mb-6" style={{ color: '#817D7D', letterSpacing: '0.15em' }}>見積書</h1>
 
-        {/* ヘッダー 2カラム */}
-        <div className="flex gap-12 mb-4">
-          {/* 左: 送付先 + 有効期限 + 件名 + カスタムフィールド */}
-          <div style={{ flex: '0 1 55%' }}>
-            <p className="text-xs mb-1" style={{ color: '#817D7D' }}>送付先</p>
-            <p className="text-sm font-medium mb-3">{estimate.customer.companyName} 御中</p>
-
-            {estimate.expiryDate && (
-              <div className="flex gap-2 mb-2 text-sm">
-                <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>有効期限</span>
-                <span className="text-gray-300 shrink-0">:</span>
-                <span className="font-medium">{formatDate(estimate.expiryDate.toISOString())}</span>
-              </div>
-            )}
-
-            {estimate.subject && (
-              <div className="flex gap-2 mb-2 text-sm">
-                <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>件名</span>
-                <span className="text-gray-300 shrink-0">:</span>
-                <span className="font-medium">{estimate.subject}</span>
-              </div>
-            )}
-
-            {(estimate as any).customFields?.map((f: any) => (
-              <div key={f.id} className="flex gap-2 mb-2 text-sm">
-                <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>{f.label}</span>
-                <span className="text-gray-300 shrink-0">:</span>
-                <span className="font-medium">{f.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* 右: 自社情報 + 印鑑枠（常に表示） */}
-          <div className="w-44 text-sm">
-            {companyInfo?.companyName && (
-              <div className="space-y-1 mb-3">
-                <p className="font-medium text-sm">
-                  {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
-                </p>
-                {companyInfo.postalCode    && <p className="text-xs text-gray-500">{companyInfo.postalCode}</p>}
-                {companyInfo.address       && <p className="text-xs text-gray-500">{companyInfo.address}</p>}
-                {companyInfo.phone         && <p className="text-xs text-gray-500">電話番号 : {companyInfo.phone}</p>}
-                {companyInfo.registrationNumber && (
-                  <p className="text-xs text-gray-500">登録番号 : {companyInfo.registrationNumber}</p>
-                )}
-              </div>
-            )}
-            {/* 印鑑用枠 */}
-            <div className="flex gap-1 mt-2">
-              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* 総額バー: 左カラム幅に収まる */}
+        {/* ヘッダー + 総額バーを1つのflex行にまとめる（右カラム下端を総額バーに揃える） */}
         <div className="flex gap-12 mb-10">
-          <div style={{ flex: '0 1 55%' }}>
-            <div className="flex justify-between items-center border-b-2 border-gray-400 py-2">
+          {/* 左カラム: 送付先 + 有効期限 + 件名 + カスタムフィールド + 総額バー */}
+          <div style={{ flex: '0 1 55%' }} className="flex flex-col">
+            <div className="flex-1">
+              <p className="text-xs mb-1" style={{ color: '#817D7D' }}>送付先</p>
+              <p className="text-sm font-medium mb-3">{estimate.customer.companyName} 御中</p>
+
+              {estimate.expiryDate && (
+                <div className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>有効期限</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium">{formatDate(estimate.expiryDate.toISOString())}</span>
+                </div>
+              )}
+
+              {estimate.subject && (
+                <div className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>件名</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium">{estimate.subject}</span>
+                </div>
+              )}
+
+              {(estimate as any).customFields?.map((f: any) => (
+                <div key={f.id} className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>{f.label}</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium">{f.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 総額バー */}
+            <div className="flex justify-between items-center border-b-2 border-gray-400 py-2 mt-4">
               <span className="text-sm text-gray-500">総額</span>
               <span className="text-xl font-medium">{formatCurrency(total)}</span>
             </div>
           </div>
-          <div className="w-44" />
+
+          {/* 右カラム: 自社情報 + 電子印鑑 + 印鑑枠（右端まで・下端を総額バーに揃える） */}
+          <div className="flex-1 flex flex-col justify-between text-sm">
+            <div>
+              {companyInfo?.companyName && (
+                <div className="space-y-1 mb-2">
+                  <p className="font-medium">{companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}</p>
+                  {companyInfo.postalCode    && <p className="text-xs text-gray-500">{companyInfo.postalCode}</p>}
+                  {companyInfo.address       && <p className="text-xs text-gray-500">{companyInfo.address}</p>}
+                  {companyInfo.phone         && <p className="text-xs text-gray-500">電話番号 : {companyInfo.phone}</p>}
+                  {companyInfo.registrationNumber && (
+                    <p className="text-xs text-gray-500">登録番号 : {companyInfo.registrationNumber}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* 印鑑枠（電子印鑑 or 空枠×3） */}
+            <div className="flex gap-1 mt-2">
+              {companyInfo?.stampImage ? (
+                <>
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                  <div className="flex-1 border border-gray-300 flex items-center justify-center p-0.5" style={{ height: '44px' }}>
+                    <img src={companyInfo.stampImage} alt="印鑑" className="max-h-full max-w-full object-contain" />
+                  </div>
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 明細テーブル */}
@@ -190,29 +191,26 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           </tbody>
         </table>
 
-        {/* 集計: 右端をテーブルの総額列に揃える */}
+        {/* 集計 */}
         <div className="flex justify-end mt-2">
-          <div className="text-xs" style={{ minWidth: '16rem' }}>
-            <div className="flex justify-between py-1.5">
+          <div style={{ minWidth: '16rem' }}>
+            <div className="flex justify-between py-1.5 text-xs">
               <span className="pr-6" style={{ color: '#727272' }}>小計</span>
-              <span className="pr-3 tabular-nums">{subtotal.toLocaleString('ja-JP')}</span>
+              <span className="pr-3">{subtotal.toLocaleString('ja-JP')}</span>
             </div>
-            <div className="flex justify-between py-1.5">
+            <div className="flex justify-between py-1.5 text-xs">
               <span className="pr-6" style={{ color: '#727272' }}>{taxLabel}</span>
-              <span className="pr-3 tabular-nums">{taxAmount.toLocaleString('ja-JP')}</span>
+              <span className="pr-3">{taxAmount.toLocaleString('ja-JP')}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between py-1.5">
+              <div className="flex justify-between py-1.5 text-xs">
                 <span className="pr-6" style={{ color: '#727272' }}>値引き</span>
-                <span className="pr-3 tabular-nums">(-) {discount.toLocaleString('ja-JP')}</span>
+                <span className="pr-3">(-) {discount.toLocaleString('ja-JP')}</span>
               </div>
             )}
-            <div
-              className="flex justify-between py-2 px-3 font-medium mt-1 text-sm"
-              style={{ backgroundColor: '#eeeeee' }}
-            >
+            <div className="flex justify-between py-2 px-3 font-medium mt-1 text-sm" style={{ backgroundColor: '#eeeeee' }}>
               <span>総額</span>
-              <span className="tabular-nums">¥{total.toLocaleString('ja-JP')}</span>
+              <span>¥{total.toLocaleString('ja-JP')}</span>
             </div>
           </div>
         </div>

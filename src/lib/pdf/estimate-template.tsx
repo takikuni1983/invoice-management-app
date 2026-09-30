@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Document, Page, Text, View, StyleSheet, Font,
+  Document, Page, Text, View, StyleSheet, Font, Image,
 } from '@react-pdf/renderer';
 import path from 'path';
 import fs from 'fs';
@@ -177,6 +177,7 @@ interface Props {
     companyName: string; ownerName?: string | null;
     postalCode?: string | null; address?: string | null;
     phone?: string | null; registrationNumber?: string | null;
+    stampImage?: string | null;
   };
 }
 
@@ -257,7 +258,11 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
             ) : null}
             <View style={s.stampArea}>
               <View style={s.stampBox} />
-              <View style={s.stampBox} />
+              <View style={[s.stampBox, { alignItems: 'center', justifyContent: 'center' }]}>
+                {companyInfo?.stampImage ? (
+                  <Image src={companyInfo.stampImage} style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                ) : null}
+              </View>
               <View style={s.stampBox} />
             </View>
           </View>
