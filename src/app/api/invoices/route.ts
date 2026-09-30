@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { generateInvoiceNumber } from '@/lib/utils';
+import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { customerId, estimateId, status, issueDate, dueDate, subject, notes, terms, bankInfo, taxRate, lineItems } = body;
+  const { customerId, estimateId, status, issueDate, dueDate, subject, notes, terms, bankInfo, taxRate, lineItems, discount, customFields } = body;
 
   if (!customerId || !issueDate) {
     return NextResponse.json({ error: '顧客と発行日は必須です' }, { status: 400 });
@@ -47,19 +48,10 @@ export async function POST(req: NextRequest) {
     const last = await tx.invoice.findFirst({ orderBy: { invoiceNumber: 'desc' } });
     const invoiceNumber = generateInvoiceNumber(last?.invoiceNumber ?? null);
 
-    const items = (lineItems ?? []).map((item: any, i: number) => ({
-      sortOrder: i,
-      description: item.description,
-      quantity: Number(item.quantity),
-      unit: item.unit ?? '',
-      unitPrice: Number(item.unitPrice),
-      amount: Number(item.quantity) * Number(item.unitPrice),
-    }));
-
-    const subtotal = items.reduce((sum: number, item: any) => sum + item.amount, 0);
     const rate = Number(taxRate ?? 10);
-    const taxAmount = Math.round(subtotal * rate / 100);
-    const totalAmount = subtotal + taxAmount;
+    const items = buildLineItems(lineItems, rate);
+    const totals = calcTotals(items, discount);
+    const fields = buildCustomFields(customFields);
 
     const invoice = await tx.invoice.create({
       data: {
@@ -73,18 +65,21 @@ export async function POST(req: NextRequest) {
         notes: notes ?? '',
         terms: terms ?? '',
         bankInfo: bankInfo ?? '',
-        subtotal,
         taxRate: rate,
-        taxAmount,
-        totalAmount,
+        ...totals,
         lineItems: { create: items },
+        customFields: fields.length > 0 ? { create: fields } : undefined,
       },
-      include: { customer: true, lineItems: { orderBy: { sortOrder: 'asc' } } },
+      include: {
+        customer: true,
+        lineItems: { orderBy: { sortOrder: 'asc' } },
+        customFields: { orderBy: { sortOrder: 'asc' } },
+      },
     });
 
-    // If created from estimate, mark estimate as APPROVED
+    // 見積書から変換した場合は見積書を「請求済み」にする
     if (estimateId) {
-      await tx.estimate.update({ where: { id: Number(estimateId) }, data: { status: 'APPROVED' } });
+      await tx.estimate.update({ where: { id: Number(estimateId) }, data: { status: 'INVOICED' } });
     }
 
     return invoice;

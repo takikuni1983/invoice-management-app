@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Invoice, Customer } from '@/types';
 import LineItemsEditor, { LineItemRow } from '@/components/line-items/LineItemsEditor';
+import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFieldsEditor';
+import DiscountTotal from '@/components/forms/DiscountTotal';
+import { useMasterItems } from '@/components/forms/useMasterItems';
 import { formatDateInput, INVOICE_STATUS_LABELS } from '@/lib/utils';
 
 interface Props {
@@ -31,7 +34,7 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
   const [lineItems, setLineItems] = useState<LineItemRow[]>(
     invoice?.lineItems.map((li) => ({
       description: li.description,
-      details: '',
+      details: li.details ?? '',
       quantity: li.quantity,
       unit: li.unit ?? '',
       unitPrice: li.unitPrice,
@@ -39,6 +42,11 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
       taxRate: li.taxRate ?? 10,
     })) ?? [{ description: '', details: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0, taxRate: 10 }]
   );
+  const [discount, setDiscount] = useState(invoice?.discount ?? 0);
+  const [customFields, setCustomFields] = useState<CustomFieldRow[]>(
+    invoice?.customFields?.map(cf => ({ label: cf.label, value: cf.value })) ?? []
+  );
+  const masterItems = useMasterItems();
 
   const set = (field: string) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -54,7 +62,15 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, taxRate, lineItems }),
+        body: JSON.stringify({
+          ...form,
+          taxRate,
+          lineItems,
+          discount,
+          customFields: customFields.map((cf, i) => ({ ...cf, sortOrder: i })),
+          // 編集時に入金日を消さない
+          ...(invoice ? { paidAt: invoice.paidAt ?? null } : {}),
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -138,14 +154,15 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
             />
           </div>
         </div>
+
+        <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">明細</h3>
-        <LineItemsEditor
-          items={lineItems}
-          onChange={setLineItems}
-        />
+        <LineItemsEditor items={lineItems} onChange={setLineItems} masterItems={masterItems} />
+
+        <DiscountTotal lineItems={lineItems} discount={discount} onDiscountChange={setDiscount} />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">

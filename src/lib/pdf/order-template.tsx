@@ -5,7 +5,7 @@ import {
 import path from 'path';
 import fs from 'fs';
 import { format, parseISO } from 'date-fns';
-import { Invoice } from '@/types';
+import { OrderAcceptance } from '@/types';
 
 // ── フォント登録 ─────────────────────────────────────────────
 const _ibmReg = fs.readFileSync(path.join(process.cwd(), 'public/fonts/IBMPlexSansJP-Regular.ttf'));
@@ -48,7 +48,7 @@ const s = StyleSheet.create({
 
   topRight: { position: 'absolute', top: 36, right: 40, textAlign: 'right' },
   docNumber: { fontFamily: 'Inter', fontSize: 9, fontWeight: 500, color: C.base },
-  docDate:   { fontFamily: 'Inter', fontSize: 7.5, color: C.gray, marginTop: 2 },
+  docDate:   { fontSize: 7.5, color: C.gray, marginTop: 2 },
 
   title: {
     fontSize: 24,
@@ -64,8 +64,8 @@ const s = StyleSheet.create({
   leftCol:  { flex: 1, paddingRight: 30 },
   rightCol: { width: 170 },
 
-  toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
   toCompany: { fontSize: 8.5, fontWeight: 500, color: C.base, marginBottom: 18 },
+  lead:      { fontSize: 8, color: C.base, marginBottom: 12 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
   cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
@@ -112,9 +112,8 @@ const s = StyleSheet.create({
 
   colDesc:  { flex: 1 },
   colQty:   { width: 38, textAlign: 'right' },
-  colPrice: { width: 64, textAlign: 'right' },
-  colTax:   { width: 44, textAlign: 'right' },
-  colAmt:   { width: 68, textAlign: 'right' },
+  colPrice: { width: 72, textAlign: 'right' },
+  colAmt:   { width: 80, textAlign: 'right' },
 
   totalsArea: { alignItems: 'flex-end', marginTop: 6 },
   totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 4 },
@@ -151,7 +150,6 @@ const s = StyleSheet.create({
   },
   noteBox:  { backgroundColor: '#F9FAFB', padding: 7, borderRadius: 2 },
   noteText: { fontSize: 7.5, fontWeight: 400, color: C.base, lineHeight: 1.7 },
-  bankBox:  { backgroundColor: '#EFF6FF', padding: 7, borderRadius: 2 },
 });
 
 // ── ユーティリティ ───────────────────────────────────────────
@@ -159,7 +157,7 @@ function fmtDate(d: Date | string | null | undefined) {
   if (!d) return '';
   try {
     const date = d instanceof Date ? d : parseISO(String(d));
-    return format(date, 'yyyy/MM/dd');
+    return format(date, 'yyyy年M月d日');
   } catch { return String(d); }
 }
 function fmtNum(n: number) {
@@ -168,7 +166,7 @@ function fmtNum(n: number) {
 
 // ── コンポーネント ───────────────────────────────────────────
 interface Props {
-  invoice: Invoice;
+  order: OrderAcceptance;
   companyInfo?: {
     companyName: string; ownerName?: string | null;
     postalCode?: string | null; address?: string | null;
@@ -177,20 +175,26 @@ interface Props {
   };
 }
 
-export function InvoicePDF({ invoice, companyInfo }: Props) {
-  const { customer, lineItems } = invoice;
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <View style={s.cfRow}>
+      <Text style={s.cfLabel}>{label}</Text>
+      <Text style={s.cfColon}> :</Text>
+      <Text style={s.cfValue}> {value}</Text>
+    </View>
+  );
+}
 
-  const subtotal   = invoice.subtotal;
-  const taxAmount  = invoice.taxAmount;
-  const discount   = invoice.discount ?? 0;
-  const total      = invoice.totalAmount;
+export function OrderAcceptancePDF({ order, companyInfo }: Props) {
+  const { customer, lineItems, customFields = [] } = order;
 
-  const taxByRate: Record<number, number> = {};
-  lineItems.forEach((i: any) => {
-    const rate = i.taxRate ?? 10;
-    taxByRate[rate] = (taxByRate[rate] ?? 0) + Math.round(i.amount * rate / 100);
-  });
-  const taxRates = Object.keys(taxByRate).map(Number).filter(r => r > 0);
+  const subtotal  = order.subtotal;
+  const taxAmount = order.taxAmount;
+  const discount  = order.discount ?? 0;
+  const total     = order.totalAmount;
+
+  const taxRates = Array.from(new Set(lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
   const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
 
   return (
@@ -199,42 +203,26 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
 
         {/* 右上 */}
         <View style={s.topRight}>
-          <Text style={s.docNumber}>{invoice.invoiceNumber}</Text>
-          <Text style={s.docDate}>{fmtDate(invoice.issueDate)}</Text>
+          <Text style={s.docNumber}>{order.orderNumber}</Text>
+          <Text style={s.docDate}>発注日 : {fmtDate(order.orderDate)}</Text>
         </View>
 
         {/* タイトル */}
-        <Text style={s.title}>請求書</Text>
+        <Text style={s.title}>発注請書</Text>
 
         {/* ヘッダー 2カラム */}
         <View style={s.twoCol}>
-          {/* 左: 請求先 + 支払期限 + 件名 */}
+          {/* 左: 発注元 + 文言 + 案件情報 */}
           <View style={s.leftCol}>
-            <Text style={s.toLabel}>請求先</Text>
             <Text style={s.toCompany}>{customer?.companyName} 御中</Text>
+            <Text style={s.lead}>下記の通り発注を承りました。</Text>
 
-            {invoice.dueDate ? (
-              <View style={s.cfRow}>
-                <Text style={s.cfLabel}>支払期限</Text>
-                <Text style={s.cfColon}> :</Text>
-                <Text style={s.cfValue}> {fmtDate(invoice.dueDate)}</Text>
-              </View>
-            ) : null}
-
-            {invoice.subject ? (
-              <View style={s.cfRow}>
-                <Text style={s.cfLabel}>件名</Text>
-                <Text style={s.cfColon}> :</Text>
-                <Text style={s.cfValue}> {invoice.subject}</Text>
-              </View>
-            ) : null}
-
-            {(invoice.customFields ?? []).map((cf, i) => (
-              <View key={i} style={s.cfRow}>
-                <Text style={s.cfLabel}>{cf.label}</Text>
-                <Text style={s.cfColon}> :</Text>
-                <Text style={s.cfValue}> {cf.value}</Text>
-              </View>
+            <InfoRow label="案件名" value={order.subject} />
+            <InfoRow label="納期" value={fmtDate(order.deliveryDate)} />
+            <InfoRow label="納入場所" value={order.deliveryPlace} />
+            <InfoRow label="支払条件" value={order.paymentTerms} />
+            {customFields.map((cf, i) => (
+              <InfoRow key={i} label={cf.label} value={cf.value} />
             ))}
           </View>
 
@@ -265,11 +253,11 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
           </View>
         </View>
 
-        {/* 総額バー */}
+        {/* 発注金額バー */}
         <View style={[s.twoCol, { marginBottom: 30 }]}>
           <View style={s.leftCol}>
             <View style={s.totalBar}>
-              <Text style={s.totalBarLabel}>総額</Text>
+              <Text style={s.totalBarLabel}>発注金額</Text>
               <Text style={s.totalBarValue}>¥{fmtNum(total)}</Text>
             </View>
           </View>
@@ -279,33 +267,27 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
         {/* 明細テーブル */}
         <View>
           <View style={s.tableHead}>
-            <Text style={[s.tableHeadText, s.colDesc]}>項目 &amp; 詳細</Text>
+            <Text style={[s.tableHeadText, s.colDesc]}>納品物 &amp; 詳細</Text>
             <Text style={[s.tableHeadText, s.colQty]}>数量</Text>
             <Text style={[s.tableHeadText, s.colPrice]}>単価</Text>
-            <Text style={[s.tableHeadText, s.colTax]}>税(%)</Text>
             <Text style={[s.tableHeadText, s.colAmt]}>総額</Text>
           </View>
 
-          {lineItems.map((item: any, i: number) => (
-            <View key={i} style={s.tableRow}>
+          {lineItems.map((item, i) => (
+            <View key={i} style={s.tableRow} wrap={false}>
               <View style={s.colDesc}>
                 <Text style={s.itemName}>{item.description}</Text>
-                {item.details ? (
-                  <Text style={s.itemDetail}>{item.details}</Text>
-                ) : null}
+                {item.details ? <Text style={s.itemDetail}>{item.details}</Text> : null}
               </View>
               <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{item.quantity}</Text>
               <Text style={[s.colPrice, { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.unitPrice)}</Text>
-              <Text style={[s.colTax,   { fontFamily: 'Inter', fontSize: 8, color: C.gray }]}>
-                {(item.taxRate ?? 10) === 0 ? '-' : `${item.taxRate ?? 10}`}
-              </Text>
               <Text style={[s.colAmt,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.amount)}</Text>
             </View>
           ))}
         </View>
 
         {/* 集計 */}
-        <View style={s.totalsArea}>
+        <View style={s.totalsArea} wrap={false}>
           <View style={s.totalLine}>
             <Text style={s.totalLineLabel}>小計</Text>
             <Text style={s.totalLineValue}>{fmtNum(subtotal)}</Text>
@@ -326,24 +308,12 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
           </View>
         </View>
 
-        {invoice.bankInfo && (
-          <View style={s.section}>
-            <Text style={s.sectionLabel}>振込先</Text>
-            <View style={s.bankBox}><Text style={s.noteText}>{invoice.bankInfo}</Text></View>
-          </View>
-        )}
-        {invoice.notes && (
+        {order.notes ? (
           <View style={s.section}>
             <Text style={s.sectionLabel}>備考</Text>
-            <View style={s.noteBox}><Text style={s.noteText}>{invoice.notes}</Text></View>
+            <View style={s.noteBox}><Text style={s.noteText}>{order.notes}</Text></View>
           </View>
-        )}
-        {invoice.terms && (
-          <View style={s.section}>
-            <Text style={s.sectionLabel}>取引条件</Text>
-            <Text style={s.noteText}>{invoice.terms}</Text>
-          </View>
-        )}
+        ) : null}
       </Page>
     </Document>
   );

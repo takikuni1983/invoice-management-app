@@ -57,32 +57,34 @@ model Customer {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  estimates Estimate[]
-  invoices  Invoice[]
+  estimates        Estimate[]
+  invoices         Invoice[]
+  orderAcceptances OrderAcceptance[]
 }
 
 model Estimate {
-  id             Int      @id @default(autoincrement())
-  estimateNumber String   @unique
+  id             Int       @id @default(autoincrement())
+  estimateNumber String    @unique
   customerId     Int
-  customer       Customer @relation(fields: [customerId], references: [id])
-  status         String   @default("DRAFT")
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  status         String    @default("DRAFT")
   issueDate      DateTime
   expiryDate     DateTime?
   subject        String?
   projectName    String?
   notes          String?
   terms          String?
-  subtotal       Float    @default(0)
-  taxRate        Float    @default(10)
-  taxAmount      Float    @default(0)
-  totalAmount    Float    @default(0)
-  discount       Float    @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  subtotal       Float     @default(0)
+  taxRate        Float     @default(10)
+  taxAmount      Float     @default(0)
+  totalAmount    Float     @default(0)
+  discount       Float     @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  lineItems    EstimateLineItem[]
-  customFields EstimateCustomField[]
+  lineItems        EstimateLineItem[]
+  customFields     EstimateCustomField[]
+  orderAcceptances OrderAcceptance[]
 }
 
 model EstimateLineItem {
@@ -100,28 +102,38 @@ model EstimateLineItem {
 }
 
 model Invoice {
-  id            Int      @id @default(autoincrement())
-  invoiceNumber String   @unique
+  id            Int       @id @default(autoincrement())
+  invoiceNumber String    @unique
   customerId    Int
-  customer      Customer @relation(fields: [customerId], references: [id])
+  customer      Customer  @relation(fields: [customerId], references: [id])
   estimateId    Int?
-  status        String   @default("DRAFT")
+  status        String    @default("DRAFT")
   issueDate     DateTime
   dueDate       DateTime?
   subject       String?
   notes         String?
   terms         String?
   bankInfo      String?
-  subtotal      Float    @default(0)
-  taxRate       Float    @default(10)
-  taxAmount     Float    @default(0)
-  discount      Float    @default(0)
-  totalAmount   Float    @default(0)
+  subtotal      Float     @default(0)
+  taxRate       Float     @default(10)
+  taxAmount     Float     @default(0)
+  discount      Float     @default(0)
+  totalAmount   Float     @default(0)
   paidAt        DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  lineItems InvoiceLineItem[]
+  lineItems    InvoiceLineItem[]
+  customFields InvoiceCustomField[]
+}
+
+model InvoiceCustomField {
+  id        Int     @id @default(autoincrement())
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  label     String
+  value     String  @default("")
+  sortOrder Int     @default(0)
 }
 
 model InvoiceLineItem {
@@ -136,4 +148,53 @@ model InvoiceLineItem {
   unitPrice   Float   @default(0)
   amount      Float   @default(0)
   taxRate     Float   @default(10)
+}
+
+// 発注請書（見積書をベースに作成）
+model OrderAcceptance {
+  id            Int       @id @default(autoincrement())
+  orderNumber   String    @unique
+  customerId    Int
+  customer      Customer  @relation(fields: [customerId], references: [id])
+  estimateId    Int?
+  estimate      Estimate? @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  status        String    @default("DRAFT")
+  orderDate     DateTime
+  subject       String?
+  deliveryDate  DateTime?
+  deliveryPlace String?
+  paymentTerms  String?
+  notes         String?
+  subtotal      Float     @default(0)
+  taxAmount     Float     @default(0)
+  discount      Float     @default(0)
+  totalAmount   Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  lineItems    OrderAcceptanceLineItem[]
+  customFields OrderAcceptanceCustomField[]
+}
+
+model OrderAcceptanceLineItem {
+  id          Int             @id @default(autoincrement())
+  orderId     Int
+  order       OrderAcceptance @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sortOrder   Int             @default(0)
+  description String
+  details     String?
+  quantity    Float           @default(1)
+  unit        String?
+  unitPrice   Float           @default(0)
+  amount      Float           @default(0)
+  taxRate     Float           @default(10)
+}
+
+model OrderAcceptanceCustomField {
+  id        Int             @id @default(autoincrement())
+  orderId   Int
+  order     OrderAcceptance @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  label     String
+  value     String          @default("")
+  sortOrder Int             @default(0)
 }

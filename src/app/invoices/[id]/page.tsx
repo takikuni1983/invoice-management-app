@@ -16,6 +16,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       include: {
         customer: true,
         lineItems: { orderBy: { sortOrder: 'asc' } },
+        customFields: { orderBy: { sortOrder: 'asc' } },
       },
     }),
     prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
@@ -25,7 +26,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
 
   const subtotal = invoice.subtotal;
   const taxAmount = invoice.taxAmount;
-  const discount = (invoice as any).discount ?? 0;
+  const discount = invoice.discount ?? 0;
   const total = invoice.totalAmount;
 
   const taxByRate: Record<number, number> = {};
@@ -83,7 +84,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           <div style={{ flex: '0 1 55%' }} className="flex flex-col">
             <div className="flex-1">
               <p className="text-xs mb-1" style={{ color: '#817D7D' }}>請求先</p>
-              <p className="text-sm font-medium mb-3">{invoice.customer.companyName} 御中</p>
+              <p className="text-sm font-medium mb-6">{invoice.customer.companyName} 御中</p>
 
               {invoice.dueDate && (
                 <div className="flex gap-2 mb-2 text-sm">
@@ -108,6 +109,14 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                   <span className="font-medium">{invoice.subject}</span>
                 </div>
               )}
+
+              {invoice.customFields.map((f) => (
+                <div key={f.id} className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>{f.label}</span>
+                  <span className="text-gray-300 shrink-0">:</span>
+                  <span className="font-medium">{f.value}</span>
+                </div>
+              ))}
             </div>
 
             {/* 総額バー */}
@@ -138,7 +147,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 <>
                   <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
                   <div className="flex-1 border border-gray-300 flex items-center justify-center p-0.5" style={{ height: '44px' }}>
-                    <img src={(companyInfo as any).stampImage} alt="印鑑" className="max-h-full max-w-full object-contain" />
+                    {/* eslint-disable-next-line @next/next/no-img-element -- data URL の印鑑画像 */}
+                    <img src={companyInfo.stampImage} alt="印鑑" className="max-h-full max-w-full object-contain" />
                   </div>
                   <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
                 </>
@@ -170,7 +180,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 <td className="px-3 py-3">
                   <div className="font-medium" style={{ fontSize: '8pt' }}>{item.description}</div>
                   {(item as any).details && (
-                    <div className="mt-1 leading-relaxed" style={{ fontSize: '7pt', color: '#727272' }}>
+                    <div className="mt-1 leading-relaxed whitespace-pre-line" style={{ fontSize: '7pt', color: '#727272' }}>
                       {(item as any).details}
                     </div>
                   )}

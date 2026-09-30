@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Package,
   Settings,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +18,7 @@ const navItems = [
   { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
   { href: '/customers', label: '顧客管理', icon: Users },
   { href: '/estimates', label: '見積書', icon: FileText },
+  { href: '/orders', label: '発注請書', icon: ClipboardCheck },
   { href: '/invoices', label: '請求書', icon: Receipt },
   { href: '/items', label: '品目マスタ', icon: Package },
   { href: '/settings', label: '設定', icon: Settings },

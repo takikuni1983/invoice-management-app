@@ -10,6 +10,8 @@ const pageTitles: Record<string, string> = {
   '/estimates/new': '見積書を新規作成',
   '/invoices': '請求書',
   '/invoices/new': '請求書を新規作成',
+  '/orders': '発注請書',
+  '/orders/new': '発注請書を新規作成',
 };
 
 export default function Header() {
@@ -22,6 +24,8 @@ export default function Header() {
       ? '見積書詳細'
       : pathname.includes('/invoices/')
       ? '請求書詳細'
+      : pathname.includes('/orders/')
+      ? '発注請書詳細'
       : pathname.includes('/customers/')
       ? '顧客詳細'
       : '');

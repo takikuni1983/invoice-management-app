@@ -4,133 +4,107 @@ import { prisma } from '@/lib/db';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import StatusBadge from '@/components/ui/StatusBadge';
 import DeleteButton from '@/components/ui/DeleteButton';
-import ConvertToInvoiceButton from '@/components/estimates/ConvertToInvoiceButton';
-import { Edit, Download, ClipboardCheck } from 'lucide-react';
+import { Edit, Download } from 'lucide-react';
 
-export default async function EstimateDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [estimate, companyInfo] = await Promise.all([
-    prisma.estimate.findUnique({
+  const [order, companyInfo] = await Promise.all([
+    prisma.orderAcceptance.findUnique({
       where: { id: Number(id) },
       include: {
         customer: true,
+        estimate: { select: { id: true, estimateNumber: true } },
         lineItems: { orderBy: { sortOrder: 'asc' } },
         customFields: { orderBy: { sortOrder: 'asc' } },
-        orderAcceptances: { select: { id: true, orderNumber: true }, orderBy: { createdAt: 'asc' } },
       },
     }),
     prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
   ]);
 
-  if (!estimate) notFound();
+  if (!order) notFound();
 
-  const subtotal = estimate.subtotal;
-  const taxAmount = estimate.taxAmount;
-  const discount = estimate.discount ?? 0;
-  const total = estimate.totalAmount;
+  const { subtotal, taxAmount, totalAmount: total } = order;
+  const discount = order.discount ?? 0;
 
-  const taxByRate: Record<number, number> = {};
-  estimate.lineItems.forEach((item: any) => {
-    const rate = item.taxRate ?? 10;
-    taxByRate[rate] = (taxByRate[rate] ?? 0) + Math.round(item.amount * rate / 100);
-  });
-  const taxRates = Object.keys(taxByRate).map(Number).filter(r => r > 0);
+  const taxRates = Array.from(new Set(order.lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
   const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
+
+  const infoRows: { label: string; value: string | null | undefined }[] = [
+    { label: '案件名', value: order.subject },
+    { label: '納期', value: order.deliveryDate ? formatDate(order.deliveryDate.toISOString()) : null },
+    { label: '納入場所', value: order.deliveryPlace },
+    { label: '支払条件', value: order.paymentTerms },
+    ...order.customFields.map(f => ({ label: f.label, value: f.value })),
+  ];
 
   return (
     <div className="max-w-3xl space-y-4">
       {/* アクションバー */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-medium text-gray-900">{estimate.estimateNumber}</h2>
-          <StatusBadge status={estimate.status} type="estimate" />
-          {estimate.orderAcceptances.map((o) => (
-            <Link key={o.id} href={`/orders/${o.id}`} className="text-xs text-gray-500 hover:underline">
-              発注請書: {o.orderNumber}
+          <h2 className="text-xl font-medium text-gray-900">{order.orderNumber}</h2>
+          <StatusBadge status={order.status} type="order" />
+          {order.estimate && (
+            <Link href={`/estimates/${order.estimate.id}`} className="text-xs text-gray-500 hover:underline">
+              元見積: {order.estimate.estimateNumber}
             </Link>
-          ))}
+          )}
         </div>
         <div className="flex gap-2">
           <a
-            href={`/api/estimates/${estimate.id}/pdf`}
+            href={`/api/orders/${order.id}/pdf`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
           >
             <Download className="h-4 w-4" /> PDF
           </a>
           <Link
-            href={`/orders/new?estimateId=${estimate.id}`}
-            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
-          >
-            <ClipboardCheck className="h-4 w-4" /> 発注請書を作成
-          </Link>
-          {estimate.status !== 'INVOICED' && (
-            <ConvertToInvoiceButton estimateId={estimate.id} />
-          )}
-          <Link
-            href={`/estimates/${estimate.id}/edit`}
+            href={`/orders/${order.id}/edit`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
           >
             <Edit className="h-4 w-4" /> 編集
           </Link>
-          <DeleteButton id={estimate.id} type="estimates" redirectTo="/estimates" />
+          <DeleteButton id={order.id} type="orders" redirectTo="/orders" />
         </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-8">
 
-        {/* 右上: 見積番号・発行日 */}
+        {/* 右上: 番号・発注日 */}
         <div className="flex justify-end mb-2">
           <div className="text-right">
-            <p className="font-medium text-sm">{estimate.estimateNumber}</p>
-            <p className="text-xs text-gray-500">{formatDate(estimate.issueDate.toISOString())}</p>
+            <p className="font-medium text-sm">{order.orderNumber}</p>
+            <p className="text-xs text-gray-500">発注日 : {formatDate(order.orderDate.toISOString())}</p>
           </div>
         </div>
 
         {/* タイトル */}
-        <h1 className="text-3xl font-medium text-center mb-6" style={{ color: '#817D7D', letterSpacing: '0.15em' }}>見積書</h1>
+        <h1 className="text-3xl font-medium text-center mb-6" style={{ color: '#817D7D', letterSpacing: '0.15em' }}>発注請書</h1>
 
-        {/* ヘッダー + 総額バーを1つのflex行にまとめる（右カラム下端を総額バーに揃える） */}
         <div className="flex gap-12 mb-10">
-          {/* 左カラム: 送付先 + 有効期限 + 件名 + カスタムフィールド + 総額バー */}
+          {/* 左カラム: 発注元 + 文言 + 案件情報 + 発注金額バー */}
           <div style={{ flex: '0 1 55%' }} className="flex flex-col">
             <div className="flex-1">
-              <p className="text-xs mb-1" style={{ color: '#817D7D' }}>送付先</p>
-              <p className="text-sm font-medium mb-6">{estimate.customer.companyName} 御中</p>
+              <p className="text-sm font-medium mb-6">{order.customer.companyName} 御中</p>
+              <p className="text-sm mb-4">下記の通り発注を承りました。</p>
 
-              {estimate.expiryDate && (
-                <div className="flex gap-2 mb-2 text-sm">
-                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>有効期限</span>
+              {infoRows.filter(r => r.value).map((r, i) => (
+                <div key={i} className="flex gap-2 mb-2 text-sm">
+                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>{r.label}</span>
                   <span className="text-gray-300 shrink-0">:</span>
-                  <span className="font-medium">{formatDate(estimate.expiryDate.toISOString())}</span>
-                </div>
-              )}
-
-              {estimate.subject && (
-                <div className="flex gap-2 mb-2 text-sm">
-                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>件名</span>
-                  <span className="text-gray-300 shrink-0">:</span>
-                  <span className="font-medium">{estimate.subject}</span>
-                </div>
-              )}
-
-              {(estimate as any).customFields?.map((f: any) => (
-                <div key={f.id} className="flex gap-2 mb-2 text-sm">
-                  <span className="w-16 shrink-0" style={{ color: '#817D7D' }}>{f.label}</span>
-                  <span className="text-gray-300 shrink-0">:</span>
-                  <span className="font-medium">{f.value}</span>
+                  <span className="font-medium">{r.value}</span>
                 </div>
               ))}
             </div>
 
-            {/* 総額バー */}
+            {/* 発注金額バー */}
             <div className="flex justify-between items-center border-b-2 border-gray-400 py-2 mt-4">
-              <span className="text-sm text-gray-500">総額</span>
+              <span className="text-sm text-gray-500">発注金額</span>
               <span className="text-xl font-medium">{formatCurrency(total)}</span>
             </div>
           </div>
 
-          {/* 右カラム: 自社情報 + 電子印鑑 + 印鑑枠（右端まで・下端を総額バーに揃える） */}
+          {/* 右カラム: 自社情報 + 印鑑枠 */}
           <div className="flex-1 flex flex-col justify-between text-sm">
             <div>
               {companyInfo?.companyName && (
@@ -145,24 +119,17 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
                 </div>
               )}
             </div>
-            {/* 印鑑枠（電子印鑑 or 空枠×3） */}
             <div className="flex gap-1 mt-2">
-              {companyInfo?.stampImage ? (
-                <>
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                  <div className="flex-1 border border-gray-300 flex items-center justify-center p-0.5" style={{ height: '44px' }}>
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+              <div className="flex-1 border border-gray-300 flex items-center justify-center p-0.5" style={{ height: '44px' }}>
+                {companyInfo?.stampImage && (
+                  <>
                     {/* eslint-disable-next-line @next/next/no-img-element -- data URL の印鑑画像 */}
                     <img src={companyInfo.stampImage} alt="印鑑" className="max-h-full max-w-full object-contain" />
-                  </div>
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                </>
-              ) : (
-                <>
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                </>
-              )}
+                  </>
+                )}
+              </div>
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
             </div>
           </div>
         </div>
@@ -171,30 +138,26 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         <table className="w-full text-sm mb-2">
           <thead>
             <tr style={{ backgroundColor: '#3c3d3a' }}>
-              <th className="text-left px-3 py-2 font-medium text-white" style={{ fontSize: '9pt' }}>項目 &amp; 詳細</th>
+              <th className="text-left px-3 py-2 font-medium text-white" style={{ fontSize: '9pt' }}>納品物 &amp; 詳細</th>
               <th className="text-right px-3 py-2 font-medium text-white w-16" style={{ fontSize: '9pt' }}>数量</th>
               <th className="text-right px-3 py-2 font-medium text-white w-24" style={{ fontSize: '9pt' }}>単価</th>
-              <th className="text-right px-3 py-2 font-medium text-white w-20" style={{ fontSize: '9pt' }}>税(%)</th>
               <th className="text-right px-3 py-2 font-medium text-white w-28" style={{ fontSize: '9pt' }}>総額</th>
             </tr>
           </thead>
           <tbody>
-            {estimate.lineItems.map((item) => (
+            {order.lineItems.map((item) => (
               <tr key={item.id} className="border-b bg-white" style={{ borderColor: '#e3e3e3' }}>
                 <td className="px-3 py-3">
                   <div className="font-medium" style={{ fontSize: '8pt' }}>{item.description}</div>
-                  {(item as any).details && (
+                  {item.details && (
                     <div className="mt-1 leading-relaxed whitespace-pre-line" style={{ fontSize: '7pt', color: '#727272' }}>
-                      {(item as any).details}
+                      {item.details}
                     </div>
                   )}
                 </td>
                 <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>{item.quantity}</td>
                 <td className="px-3 py-3 text-right" style={{ fontSize: '8pt' }}>
                   {item.unitPrice.toLocaleString('ja-JP')}
-                </td>
-                <td className="px-3 py-3 text-right" style={{ fontSize: '8pt', color: '#727272' }}>
-                  {((item as any).taxRate ?? 10) === 0 ? '-' : `${(item as any).taxRate ?? 10}`}
                 </td>
                 <td className="px-3 py-3 text-right font-medium" style={{ fontSize: '8pt' }}>
                   {item.amount.toLocaleString('ja-JP')}
@@ -228,17 +191,10 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           </div>
         </div>
 
-        {/* 備考・取引条件 */}
-        {estimate.notes && (
+        {order.notes && (
           <div className="mt-6">
             <p className="text-xs border-b pb-1 mb-2" style={{ color: '#817D7D', borderColor: '#e3e3e3' }}>備考</p>
-            <p className="text-sm bg-gray-50 rounded p-3 leading-relaxed">{estimate.notes}</p>
-          </div>
-        )}
-        {estimate.terms && (
-          <div className="mt-4">
-            <p className="text-xs border-b pb-1 mb-2" style={{ color: '#817D7D', borderColor: '#e3e3e3' }}>取引条件</p>
-            <p className="text-sm leading-relaxed">{estimate.terms}</p>
+            <p className="text-sm bg-gray-50 rounded p-3 leading-relaxed whitespace-pre-line">{order.notes}</p>
           </div>
         )}
       </div>

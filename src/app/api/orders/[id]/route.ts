@@ -10,39 +10,43 @@ const include = {
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const invoice = await prisma.invoice.findUnique({ where: { id: Number(id) }, include });
-  if (!invoice) return NextResponse.json({ error: '請求書が見つかりません' }, { status: 404 });
-  return NextResponse.json(invoice);
+  const order = await prisma.orderAcceptance.findUnique({ where: { id: Number(id) }, include });
+  if (!order) return NextResponse.json({ error: '発注請書が見つかりません' }, { status: 404 });
+  return NextResponse.json(order);
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const { customerId, status, issueDate, dueDate, subject, notes, terms, bankInfo, taxRate, lineItems, paidAt, discount, customFields } = body;
+  const {
+    customerId, status, orderDate, subject, deliveryDate, deliveryPlace,
+    paymentTerms, notes, lineItems, discount, customFields,
+  } = body;
+
+  if (!customerId || !orderDate) {
+    return NextResponse.json({ error: '顧客と発注日は必須です' }, { status: 400 });
+  }
 
   const result = await prisma.$transaction(async (tx) => {
-    await tx.invoiceLineItem.deleteMany({ where: { invoiceId: Number(id) } });
-    await tx.invoiceCustomField.deleteMany({ where: { invoiceId: Number(id) } });
+    await tx.orderAcceptanceLineItem.deleteMany({ where: { orderId: Number(id) } });
+    await tx.orderAcceptanceCustomField.deleteMany({ where: { orderId: Number(id) } });
 
-    const rate = Number(taxRate ?? 10);
-    const items = buildLineItems(lineItems, rate);
+    const items = buildLineItems(lineItems);
     const totals = calcTotals(items, discount);
     const fields = buildCustomFields(customFields);
 
-    return tx.invoice.update({
+    return tx.orderAcceptance.update({
       where: { id: Number(id) },
       data: {
         customerId: Number(customerId),
         status,
-        issueDate: new Date(issueDate),
-        dueDate: dueDate ? new Date(dueDate) : null,
-        subject,
-        notes,
-        terms,
-        bankInfo,
-        taxRate: rate,
+        orderDate: new Date(orderDate),
+        subject: subject ?? '',
+        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
+        deliveryPlace: deliveryPlace ?? '',
+        paymentTerms: paymentTerms ?? '',
+        notes: notes ?? '',
         ...totals,
-        paidAt: paidAt ? new Date(paidAt) : null,
         lineItems: { create: items },
         customFields: fields.length > 0 ? { create: fields } : undefined,
       },
@@ -55,6 +59,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.invoice.delete({ where: { id: Number(id) } });
+  await prisma.orderAcceptance.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
 }

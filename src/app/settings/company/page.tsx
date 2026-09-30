@@ -77,6 +77,7 @@ export default function CompanySettingsPage() {
           <div className="flex items-start gap-4">
             {form.stampImage ? (
               <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element -- data URL の印鑑画像 */}
                 <img src={form.stampImage} alt="電子印鑑" className="w-20 h-20 object-contain border border-gray-200 rounded" />
                 <button
                   type="button"

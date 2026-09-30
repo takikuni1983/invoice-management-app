@@ -45,6 +45,12 @@ export function generateInvoiceNumber(lastNumber: string | null): string {
   return `INV-${String(num + 1).padStart(4, '0')}`;
 }
 
+export function generateOrderNumber(lastNumber: string | null): string {
+  if (!lastNumber) return 'ORD-0001';
+  const num = parseInt(lastNumber.replace('ORD-', ''), 10);
+  return `ORD-${String(num + 1).padStart(4, '0')}`;
+}
+
 export const ESTIMATE_STATUS_LABELS: Record<string, string> = {
   DRAFT: '下書き',
   SENT: '送信済み',
@@ -75,6 +81,16 @@ export const INVOICE_STATUS_COLORS: Record<string, string> = {
   SENT: 'bg-blue-100 text-blue-700',
   PAID: 'bg-green-100 text-green-700',
   OVERDUE: 'bg-red-100 text-red-700',
+};
+
+export const ORDER_STATUS_LABELS: Record<string, string> = {
+  DRAFT: '下書き',
+  SENT: '送付済み',
+};
+
+export const ORDER_STATUS_COLORS: Record<string, string> = {
+  DRAFT: 'bg-gray-100 text-gray-700',
+  SENT: 'bg-blue-100 text-blue-700',
 };
 
 export const TAX_RATES = [0, 8, 10];

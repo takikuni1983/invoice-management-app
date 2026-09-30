@@ -1,5 +1,13 @@
 export type EstimateStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'INVOICED';
 export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE';
+export type OrderStatus = 'DRAFT' | 'SENT';
+
+export interface CustomField {
+  id?: number;
+  label: string;
+  value: string;
+  sortOrder: number;
+}
 
 export interface Customer {
   id: number;
@@ -21,8 +29,9 @@ export interface LineItem {
   id?: number;
   sortOrder: number;
   description: string;
+  details?: string | null;
   quantity: number;
-  unit?: string;
+  unit?: string | null;
   unitPrice: number;
   amount: number;
   taxRate?: number;
@@ -45,7 +54,7 @@ export interface Estimate {
   totalAmount: number;
   discount: number;
   lineItems: LineItem[];
-  customFields?: { id?: number; label: string; value: string; sortOrder: number }[];
+  customFields?: CustomField[];
   createdAt: string;
   updatedAt: string;
 }
@@ -67,8 +76,33 @@ export interface Invoice {
   taxRate: number;
   taxAmount: number;
   totalAmount: number;
+  discount?: number;
   paidAt?: string | null;
   lineItems: LineItem[];
+  customFields?: CustomField[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderAcceptance {
+  id: number;
+  orderNumber: string;
+  customerId: number;
+  customer?: Customer;
+  estimateId?: number | null;
+  status: OrderStatus;
+  orderDate: string;
+  subject?: string | null;
+  deliveryDate?: string | null;
+  deliveryPlace?: string | null;
+  paymentTerms?: string | null;
+  notes?: string | null;
+  subtotal: number;
+  taxAmount: number;
+  discount: number;
+  totalAmount: number;
+  lineItems: LineItem[];
+  customFields?: CustomField[];
   createdAt: string;
   updatedAt: string;
 }

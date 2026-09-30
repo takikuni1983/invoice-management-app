@@ -14,11 +14,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     [invoice, companyInfo] = await Promise.all([
       prisma.invoice.findUnique({
         where: { id: Number(id) },
-        include: { customer: true, lineItems: { orderBy: { sortOrder: 'asc' } } },
+        include: {
+          customer: true,
+          lineItems: { orderBy: { sortOrder: 'asc' } },
+          customFields: { orderBy: { sortOrder: 'asc' } },
+        },
       }),
       prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
     ]);
   } catch (err: any) {
+    // customFields テーブルが未作成の場合、customFields なしで再取得
+    console.warn('[PDF] DB fetch with customFields failed, retrying without:', err?.message);
     invoice = await prisma.invoice.findUnique({
       where: { id: Number(id) },
       include: { customer: true, lineItems: { orderBy: { sortOrder: 'asc' } } },

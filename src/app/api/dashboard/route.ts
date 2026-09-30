@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+
+// DB を毎回読む（本番ビルドで静的化されて PUT/POST が 405 になるのを防ぐ）
+export const dynamic = 'force-dynamic';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 

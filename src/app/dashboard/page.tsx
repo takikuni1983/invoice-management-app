@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import StatusBadge from '@/components/ui/StatusBadge';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import { TrendingUp, TrendingDown, AlertCircle, Clock, FileText } from 'lucide-react';

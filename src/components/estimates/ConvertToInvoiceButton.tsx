@@ -30,6 +30,8 @@ export default function ConvertToInvoiceButton({ estimateId }: { estimateId: num
           terms: estimate.terms,
           taxRate: estimate.taxRate,
           lineItems: estimate.lineItems,
+          discount: estimate.discount,
+          customFields: estimate.customFields,
         }),
       });
 

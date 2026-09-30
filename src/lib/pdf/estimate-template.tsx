@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Document, Page, Text, View, StyleSheet, Font, Image,
+  Document, Page, Text, View, StyleSheet, Font, Image as PdfImage,
 } from '@react-pdf/renderer';
 import path from 'path';
 import fs from 'fs';
@@ -66,7 +66,7 @@ const s = StyleSheet.create({
   rightCol:    { width: 170 },
 
   toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
-  toCompany: { fontSize: 8.5, fontWeight: 500, color: C.base, marginBottom: 10 },
+  toCompany: { fontSize: 8.5, fontWeight: 500, color: C.base, marginBottom: 18 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
   cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
@@ -260,7 +260,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
               <View style={s.stampBox} />
               <View style={[s.stampBox, { alignItems: 'center', justifyContent: 'center' }]}>
                 {companyInfo?.stampImage ? (
-                  <Image src={companyInfo.stampImage} style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                  <PdfImage src={companyInfo.stampImage} style={{ width: 36, height: 36, objectFit: 'contain' }} />
                 ) : null}
               </View>
               <View style={s.stampBox} />
