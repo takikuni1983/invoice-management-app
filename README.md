@@ -11,7 +11,14 @@
 
 どちらも http://localhost:4000 で開きます。
 
-コード更新（`git pull`）後に DB の変更がある場合は `npx prisma migrate deploy` を実行してください（`start-server.bat` は自動で実行します）。
+コード更新（`git pull`）後に DB の変更がある場合は、アプリを止めてから次を実行してください（`start-server.bat` は自動で実行します）。
+
+```
+npx prisma migrate deploy
+npx prisma generate
+```
+
+`npx prisma generate` で `EPERM: operation not permitted` が出る場合は、起動中のアプリ（`npm run dev` など）や VS Code を閉じてから再実行してください。
 
 ## 外出先・スマホから使う
 
