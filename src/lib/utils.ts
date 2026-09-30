@@ -93,4 +93,5 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   SENT: 'bg-blue-100 text-blue-700',
 };
 
-export const TAX_RATES = [0, 8, 10];
+// 先頭が税率プルダウンの既定値
+export const TAX_RATES = [10, 8, 0];

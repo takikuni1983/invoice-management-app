@@ -3,6 +3,8 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { formatCurrency, TAX_RATES } from '@/lib/utils';
 
+export const DEFAULT_TAX_RATE = 10;
+
 export interface LineItemRow {
   description: string;
   details?: string;
@@ -35,7 +37,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
   }
 
   function addItem() {
-    onChange([...items, { description: '', details: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0, taxRate: 10 }]);
+    onChange([...items, { description: '', details: '', quantity: 1, unit: '', unitPrice: 0, amount: 0, taxRate: DEFAULT_TAX_RATE }]);
   }
 
   function removeItem(index: number) {
@@ -63,7 +65,6 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
             <tr style={{ backgroundColor: '#3c3d3a' }}>
               <th className="text-left px-3 py-2 font-bold text-white text-[9pt]">品目・内容</th>
               <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-20">数量</th>
-              <th className="text-center px-3 py-2 font-bold text-white text-[9pt] w-16">単位</th>
               <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-28">単価</th>
               <th className="text-center px-3 py-2 font-bold text-white text-[9pt] w-20">税率</th>
               <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-28">金額</th>
@@ -106,13 +107,6 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                 </td>
                 <td className="px-2 py-2">
                   <input
-                    value={item.unit}
-                    onChange={(e) => updateItem(i, 'unit', e.target.value)}
-                    className="w-full text-center border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
-                  />
-                </td>
-                <td className="px-2 py-2">
-                  <input
                     type="number"
                     min="0"
                     value={item.unitPrice}
@@ -148,7 +142,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-6 text-gray-400 text-sm">
+                <td colSpan={6} className="text-center py-6 text-gray-400 text-sm">
                   明細行がありません。「行を追加」をクリックしてください。
                 </td>
               </tr>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Estimate, Customer } from '@/types';
-import LineItemsEditor, { LineItemRow } from '@/components/line-items/LineItemsEditor';
+import LineItemsEditor, { LineItemRow, DEFAULT_TAX_RATE } from '@/components/line-items/LineItemsEditor';
 import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFieldsEditor';
 import { useMasterItems } from '@/components/forms/useMasterItems';
 import DiscountTotal from '@/components/forms/DiscountTotal';
@@ -40,8 +40,8 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId }:
       unit: li.unit ?? '',
       unitPrice: li.unitPrice,
       amount: li.amount,
-      taxRate: li.taxRate ?? 10,
-    })) ?? [{ description: '', details: '', quantity: 1, unit: '式', unitPrice: 0, amount: 0, taxRate: 10 }]
+      taxRate: li.taxRate ?? DEFAULT_TAX_RATE,
+    })) ?? [{ description: '', details: '', quantity: 1, unit: '', unitPrice: 0, amount: 0, taxRate: DEFAULT_TAX_RATE }]
   );
 
   const [customFields, setCustomFields] = useState<CustomFieldRow[]>(

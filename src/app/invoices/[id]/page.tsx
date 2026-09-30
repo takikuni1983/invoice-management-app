@@ -70,8 +70,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         {/* 右上: 請求番号・発行日 */}
         <div className="flex justify-end mb-2">
           <div className="text-right">
-            <p className="font-medium text-sm">{invoice.invoiceNumber}</p>
-            <p className="text-xs text-gray-500">{formatDate(invoice.issueDate.toISOString())}</p>
+            <p className="font-medium text-[13px]">{invoice.invoiceNumber}</p>
+            <p className="text-[13px] text-gray-500">{formatDate(invoice.issueDate.toISOString())}</p>
           </div>
         </div>
 
@@ -131,7 +131,21 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             <div>
               {companyInfo?.companyName && (
                 <div className="space-y-1 mb-2">
-                  <p className="font-medium">{companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}</p>
+                  <p className="font-medium">
+                    <span className="relative inline-block">
+                      {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
+                      {companyInfo.stampImage && (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- data URL の印鑑画像 */}
+                          <img
+                            src={companyInfo.stampImage}
+                            alt="印鑑"
+                            className="absolute left-full top-1/2 -translate-y-1/2 -ml-2 w-14 h-14 max-w-none object-contain pointer-events-none z-10"
+                          />
+                        </>
+                      )}
+                    </span>
+                  </p>
                   {companyInfo.postalCode    && <p className="text-xs text-gray-500">{companyInfo.postalCode}</p>}
                   {companyInfo.address       && <p className="text-xs text-gray-500">{companyInfo.address}</p>}
                   {companyInfo.phone         && <p className="text-xs text-gray-500">電話番号 : {companyInfo.phone}</p>}
@@ -141,24 +155,11 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 </div>
               )}
             </div>
-            {/* 印鑑枠（電子印鑑 or 空枠×3） */}
+            {/* 印鑑枠 */}
             <div className="flex gap-1 mt-2">
-              {companyInfo?.stampImage ? (
-                <>
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                  <div className="flex-1 border border-gray-300 flex items-center justify-center p-0.5" style={{ height: '44px' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element -- data URL の印鑑画像 */}
-                    <img src={companyInfo.stampImage} alt="印鑑" className="max-h-full max-w-full object-contain" />
-                  </div>
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                </>
-              ) : (
-                <>
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                  <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
-                </>
-              )}
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
+              <div className="flex-1 border border-gray-300" style={{ height: '44px' }} />
             </div>
           </div>
         </div>

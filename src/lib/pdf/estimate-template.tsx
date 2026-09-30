@@ -47,8 +47,8 @@ const s = StyleSheet.create({
   },
 
   topRight: { position: 'absolute', top: 36, right: 40, textAlign: 'right' },
-  docNumber: { fontFamily: 'Inter', fontSize: 9, fontWeight: 500, color: C.base },
-  docDate:   { fontFamily: 'Inter', fontSize: 7.5, color: C.gray, marginTop: 2 },
+  docNumber: { fontFamily: 'Inter', fontSize: 9.75, fontWeight: 500, color: C.base },
+  docDate:   { fontFamily: 'Inter', fontSize: 9.75, color: C.gray, marginTop: 2 },
 
   title: {
     fontSize: 24,
@@ -71,10 +71,15 @@ const s = StyleSheet.create({
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
   cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
   cfColon: { width: 10, fontSize: 8, color: C.title, lineHeight: 1.6 },
-  cfValue: { flex: 1, fontSize: 8, fontWeight: 500, color: C.base, lineHeight: 1.6 },
+  cfValue: { flex: 1, fontSize: 8.5, fontWeight: 500, color: C.base, lineHeight: 1.6 },
 
   companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
   companyLine: { fontSize: 7.5, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
+
+  nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
+  // 幅0の基準点から絶対配置し、レイアウトに影響させない
+  stampAnchor: { width: 0, height: 0 },
+  stampImage:  { position: 'absolute', left: -6, top: -12, width: 40, height: 40, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -245,9 +250,16 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
           <View style={s.rightCol}>
             {companyInfo?.companyName ? (
               <>
-                <Text style={s.companyName}>
-                  {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
-                </Text>
+                <View style={s.nameRow}>
+                  <Text style={[s.companyName, { flexShrink: 1 }]}>
+                    {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
+                  </Text>
+                  {companyInfo.stampImage ? (
+                    <View style={s.stampAnchor}>
+                      <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
+                    </View>
+                  ) : null}
+                </View>
                 {companyInfo.postalCode && <Text style={s.companyLine}>{companyInfo.postalCode}</Text>}
                 {companyInfo.address    && <Text style={s.companyLine}>{companyInfo.address}</Text>}
                 {companyInfo.phone      && <Text style={s.companyLine}>電話番号 : {companyInfo.phone}</Text>}
@@ -258,11 +270,7 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
             ) : null}
             <View style={s.stampArea}>
               <View style={s.stampBox} />
-              <View style={[s.stampBox, { alignItems: 'center', justifyContent: 'center' }]}>
-                {companyInfo?.stampImage ? (
-                  <PdfImage src={companyInfo.stampImage} style={{ width: 36, height: 36, objectFit: 'contain' }} />
-                ) : null}
-              </View>
+              <View style={s.stampBox} />
               <View style={s.stampBox} />
             </View>
           </View>
