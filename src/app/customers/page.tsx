@@ -27,8 +27,8 @@ export default async function CustomersPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="relative w-64">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <form>
             <input
@@ -48,18 +48,18 @@ export default async function CustomersPage({
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">会社名</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">担当者名</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">メール</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">電話</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600">見積</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600">請求</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">登録日</th>
-              <th className="px-4 py-3"></th>
+              <th className="whitespace-nowrap text-left px-4 py-3 font-medium text-gray-600">会社名</th>
+              <th className="whitespace-nowrap text-left px-4 py-3 font-medium text-gray-600">担当者名</th>
+              <th className="whitespace-nowrap text-left px-4 py-3 font-medium text-gray-600">メール</th>
+              <th className="whitespace-nowrap text-left px-4 py-3 font-medium text-gray-600">電話</th>
+              <th className="whitespace-nowrap text-center px-4 py-3 font-medium text-gray-600">見積</th>
+              <th className="whitespace-nowrap text-center px-4 py-3 font-medium text-gray-600">請求</th>
+              <th className="whitespace-nowrap text-left px-4 py-3 font-medium text-gray-600">登録日</th>
+              <th className="whitespace-nowrap px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -79,11 +79,11 @@ export default async function CustomersPage({
                   </td>
                   <td className="px-4 py-3 text-gray-600">{c.contactName}</td>
                   <td className="px-4 py-3 text-gray-600">{c.email ?? '-'}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.phone ?? '-'}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{c._count.estimates}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{c._count.invoices}</td>
-                  <td className="px-4 py-3 text-gray-500">{formatDate(c.createdAt.toISOString())}</td>
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-600">{c.phone ?? '-'}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center text-gray-600">{c._count.estimates}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center text-gray-600">{c._count.invoices}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">{formatDate(c.createdAt.toISOString())}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
                     <div className="flex gap-2 justify-end">
                       <Link
                         href={`/customers/${c.id}/edit`}
@@ -99,6 +99,28 @@ export default async function CustomersPage({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* スマホ: カード表示 */}
+      <div className="md:hidden space-y-2">
+        {customers.length === 0 ? (
+          <p className="bg-white rounded-lg border border-gray-200 text-center py-10 text-sm text-gray-400">顧客が登録されていません</p>
+        ) : (
+          customers.map((c) => (
+            <Link
+              key={c.id}
+              href={`/customers/${c.id}`}
+              className="block bg-white rounded-lg border border-gray-200 p-4 active:bg-gray-50"
+            >
+              <p className="font-medium text-gray-900">{c.companyName}</p>
+              <p className="text-sm text-gray-600">{c.contactName}</p>
+              <div className="flex justify-between mt-2 text-xs text-gray-500">
+                <span>{c.phone ?? c.email ?? ''}</span>
+                <span>見積 {c._count.estimates} / 請求 {c._count.invoices}</span>
+              </div>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );

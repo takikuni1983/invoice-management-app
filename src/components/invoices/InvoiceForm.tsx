@@ -92,9 +92,9 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">{error}</div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">基本情報</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               顧客 <span className="text-red-500">*</span>
@@ -144,7 +144,7 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">件名</label>
             <input
               value={form.subject}
@@ -158,14 +158,14 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId }: P
         <CustomFieldsEditor fields={customFields} onChange={setCustomFields} />
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">明細</h3>
         <LineItemsEditor items={lineItems} onChange={setLineItems} masterItems={masterItems} />
 
         <DiscountTotal lineItems={lineItems} discount={discount} onDiscountChange={setDiscount} />
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">振込先・備考</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">振込先情報</label>

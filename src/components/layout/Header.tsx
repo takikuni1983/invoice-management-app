@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { Menu } from 'lucide-react';
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'ダッシュボード',
@@ -14,7 +15,7 @@ const pageTitles: Record<string, string> = {
   '/orders/new': '発注請書を新規作成',
 };
 
-export default function Header() {
+export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
   const title =
     pageTitles[pathname] ??
@@ -31,7 +32,14 @@ export default function Header() {
       : '');
 
   return (
-    <header className="h-14 bg-white border-b border-gray-200 flex items-center px-6">
+    <header className="h-14 bg-white border-b border-gray-200 flex items-center gap-2 px-4 md:px-6 sticky top-0 z-30">
+      <button
+        onClick={onMenuClick}
+        className="md:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+        aria-label="メニューを開く"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
       <h2 className="text-base font-semibold text-gray-800">{title}</h2>
     </header>
   );

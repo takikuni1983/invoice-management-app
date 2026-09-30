@@ -1,36 +1,22 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 請求管理システム
 
-## Getting Started
+見積書・発注請書・請求書の作成と PDF 出力、顧客・品目マスタ管理を行う Next.js 14 + Prisma (SQLite) アプリです。
 
-First, run the development server:
+## 起動
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+| 用途 | 方法 |
+|---|---|
+| 開発（コード編集しながら） | `start.bat` または `npm run dev` |
+| 普段使い・スマホから使う | `start-server.bat`（DB更新 → ビルド → 本番モード起動） |
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+どちらも http://localhost:4000 で開きます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+コード更新（`git pull`）後に DB の変更がある場合は `npx prisma migrate deploy` を実行してください（`start-server.bat` は自動で実行します）。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 外出先・スマホから使う
 
-## Learn More
+Tailscale を使って自宅PCのアプリにアクセスします。手順は [docs/remote-access.md](docs/remote-access.md) を参照してください。
 
-To learn more about Next.js, take a look at the following resources:
+## その他
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Zoho Invoice からのインポート: `npm run import:zoho`

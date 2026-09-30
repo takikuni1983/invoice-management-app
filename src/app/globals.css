@@ -17,3 +17,12 @@ body {
     text-wrap: balance;
   }
 }
+
+/* スマホ: 入力欄が 16px 未満だと iPhone がフォーカス時に拡大するので 16px にそろえる */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

@@ -59,7 +59,85 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
         </datalist>
       )}
 
-      <div className="border rounded-md overflow-hidden" style={{ borderColor: '#e3e3e3' }}>
+      {/* スマホ: 1行ずつカードで入力 */}
+      <div className="md:hidden space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="border rounded-md p-3 space-y-2" style={{ borderColor: '#e3e3e3' }}>
+            <div className="flex items-start gap-2">
+              <input
+                list={masterItems.length > 0 ? DATALIST_ID : undefined}
+                value={item.description}
+                onChange={(e) => updateItem(i, 'description', e.target.value)}
+                placeholder="品目名"
+                className="flex-1 min-w-0 border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => removeItem(i)}
+                className="p-2 text-gray-400 hover:text-red-500 rounded"
+                aria-label="行を削除"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <textarea
+              value={item.details ?? ''}
+              onChange={(e) => updateItem(i, 'details', e.target.value)}
+              placeholder="注釈（任意）"
+              rows={2}
+              className="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              style={{ color: '#727272' }}
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <label className="text-xs text-gray-500">
+                数量
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={item.quantity}
+                  onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
+                  className="mt-0.5 w-full text-right border border-gray-300 rounded px-2 py-1.5 text-gray-900"
+                />
+              </label>
+              <label className="text-xs text-gray-500">
+                単価
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={item.unitPrice}
+                  onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
+                  className="mt-0.5 w-full text-right border border-gray-300 rounded px-2 py-1.5 text-gray-900"
+                />
+              </label>
+              <label className="text-xs text-gray-500">
+                税率
+                <select
+                  value={item.taxRate}
+                  onChange={(e) => updateItem(i, 'taxRate', Number(e.target.value))}
+                  className="mt-0.5 w-full border border-gray-300 rounded px-1 py-1.5 text-gray-900 bg-white"
+                >
+                  {TAX_RATES.map((r) => (
+                    <option key={r} value={r}>{r}%</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <p className="text-right text-sm">
+              <span className="text-gray-500 mr-2">金額</span>
+              {formatCurrency(item.amount)}
+            </p>
+          </div>
+        ))}
+        {items.length === 0 && (
+          <p className="text-center py-6 text-gray-400 text-sm">明細行がありません。「行を追加」をタップしてください。</p>
+        )}
+      </div>
+
+      {/* PC: 表形式 */}
+      <div className="hidden md:block border rounded-md overflow-hidden" style={{ borderColor: '#e3e3e3' }}>
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: '#3c3d3a' }}>

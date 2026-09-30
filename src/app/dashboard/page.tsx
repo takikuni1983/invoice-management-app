@@ -71,34 +71,34 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* サマリーカード */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-5">
           <p className="text-sm text-gray-500 mb-1">今月の売上</p>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(thisMonthRevenue)}</p>
+          <p className="text-lg md:text-2xl font-bold text-gray-900">{formatCurrency(thisMonthRevenue)}</p>
           <div className={`flex items-center gap-1 text-xs mt-1 ${revenueUp ? 'text-green-600' : 'text-red-500'}`}>
             {revenueUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
             <span>前月比 {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(1)}%</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-5">
           <p className="text-sm text-gray-500 mb-1">未払い請求</p>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(unpaid._sum.totalAmount ?? 0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-gray-900">{formatCurrency(unpaid._sum.totalAmount ?? 0)}</p>
           <p className="text-xs text-gray-400 mt-1">{unpaid._count.id}件</p>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-5">
           <p className="text-sm text-gray-500 mb-1">期限超過</p>
-          <p className="text-2xl font-bold text-red-600">{formatCurrency(overdue._sum.totalAmount ?? 0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-red-600">{formatCurrency(overdue._sum.totalAmount ?? 0)}</p>
           <div className="flex items-center gap-1 text-xs text-red-500 mt-1">
             <AlertCircle className="h-3.5 w-3.5" />
             <span>{overdue._count.id}件</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-5">
           <p className="text-sm text-gray-500 mb-1">見積書（下書き）</p>
-          <p className="text-2xl font-bold text-gray-900">{draftEstimates}</p>
+          <p className="text-lg md:text-2xl font-bold text-gray-900">{draftEstimates}</p>
           <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
             <FileText className="h-3.5 w-3.5" />
             <span>未送付</span>
@@ -106,9 +106,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* 月次売上グラフ */}
-        <div className="col-span-2 bg-white rounded-lg border border-gray-200 p-5">
+        <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-5">
           <h3 className="font-medium text-gray-900 mb-4">月次売上 (過去6ヶ月)</h3>
           <RevenueChart data={monthlyRevenue} />
         </div>
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
       {/* クイックアクション */}
       <div className="bg-white rounded-lg border border-gray-200 p-5">
         <h3 className="font-medium text-gray-900 mb-3">クイックアクション</h3>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Link href="/estimates/new" className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-100">
             <FileText className="h-4 w-4" /> 見積書を作成
           </Link>

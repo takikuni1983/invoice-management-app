@@ -62,9 +62,9 @@ export default function CustomerForm({ customer }: Props) {
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">基本情報</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               会社名 <span className="text-red-500">*</span>
@@ -111,9 +111,9 @@ export default function CustomerForm({ customer }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">住所</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">郵便番号</label>
             <input
@@ -162,7 +162,7 @@ export default function CustomerForm({ customer }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <label className="block text-sm font-medium text-gray-700 mb-1">備考</label>
         <textarea
           value={form.notes}

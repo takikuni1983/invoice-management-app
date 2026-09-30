@@ -20,7 +20,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-gray-900">{customer.companyName}</h2>
           <p className="text-sm text-gray-500">{customer.contactName} 様</p>
@@ -36,7 +36,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div className="bg-white rounded-lg border border-gray-200 p-5">
           <h3 className="font-medium text-gray-900 mb-3 border-b pb-2">連絡先情報</h3>
           <dl className="space-y-2 text-sm">
@@ -62,7 +62,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       </div>
 
       {/* 見積書一覧 */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-medium text-gray-900">見積書</h3>
           <Link href={`/estimates/new?customerId=${customer.id}`} className="text-sm text-blue-600 hover:underline">
@@ -96,7 +96,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       </div>
 
       {/* 請求書一覧 */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-medium text-gray-900">請求書</h3>
           <Link href={`/invoices/new?customerId=${customer.id}`} className="text-sm text-blue-600 hover:underline">

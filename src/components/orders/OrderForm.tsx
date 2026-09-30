@@ -102,9 +102,9 @@ export default function OrderForm({ order, customers, defaultCustomerId }: Props
       )}
 
       {/* 基本情報 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">基本情報</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               発注元（顧客） <span className="text-red-500">*</span>
@@ -134,7 +134,7 @@ export default function OrderForm({ order, customers, defaultCustomerId }: Props
             <label className="block text-sm font-medium text-gray-700 mb-1">納期</label>
             <input type="date" value={form.deliveryDate} onChange={set('deliveryDate')} className={inputClass} />
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">案件名</label>
             <input value={form.subject} onChange={set('subject')} placeholder="〇〇 Webサイト改修" className={inputClass} />
           </div>
@@ -152,7 +152,7 @@ export default function OrderForm({ order, customers, defaultCustomerId }: Props
       </div>
 
       {/* 明細行 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
         <h3 className="font-medium text-gray-900 border-b pb-2 mb-4">明細</h3>
         <LineItemsEditor items={lineItems} onChange={setLineItems} masterItems={masterItems} />
 
@@ -160,7 +160,7 @@ export default function OrderForm({ order, customers, defaultCustomerId }: Props
       </div>
 
       {/* 備考 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
         <h3 className="font-medium text-gray-900 border-b pb-2">備考</h3>
         <textarea value={form.notes} onChange={set('notes')} rows={3} className={inputClass} />
       </div>

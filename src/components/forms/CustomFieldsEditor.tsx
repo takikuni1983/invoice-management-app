@@ -47,7 +47,7 @@ export default function CustomFieldsEditor({ fields, onChange }: Props) {
       <p className="text-sm font-medium text-gray-700">カスタム項目</p>
       {fields.map((cf, i) => (
         <div key={i} className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 w-32 shrink-0">{cf.label}</span>
+          <span className="text-sm text-gray-600 w-24 sm:w-32 shrink-0">{cf.label}</span>
           <input
             value={cf.value}
             onChange={(e) => updateField(i, e.target.value)}
