@@ -89,7 +89,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
               style={{ color: '#727272' }}
             />
             <div className="grid grid-cols-3 gap-2">
-              <label className="text-xs text-gray-500">
+              <label className="text-sm text-gray-500">
                 数量
                 <input
                   type="number"
@@ -101,7 +101,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                   className="mt-0.5 w-full text-right border border-gray-300 rounded px-2 py-1.5 text-gray-900"
                 />
               </label>
-              <label className="text-xs text-gray-500">
+              <label className="text-sm text-gray-500">
                 単価
                 <input
                   type="number"
@@ -112,7 +112,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                   className="mt-0.5 w-full text-right border border-gray-300 rounded px-2 py-1.5 text-gray-900"
                 />
               </label>
-              <label className="text-xs text-gray-500">
+              <label className="text-sm text-gray-500">
                 税率
                 <select
                   value={item.taxRate}
@@ -141,11 +141,11 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: '#3c3d3a' }}>
-              <th className="text-left px-3 py-2 font-bold text-white text-[9pt]">品目・内容</th>
-              <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-20">数量</th>
-              <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-28">単価</th>
-              <th className="text-center px-3 py-2 font-bold text-white text-[9pt] w-20">税率</th>
-              <th className="text-right px-3 py-2 font-bold text-white text-[9pt] w-28">金額</th>
+              <th className="text-left px-3 py-2 font-bold text-white text-sm">品目・内容</th>
+              <th className="text-right px-3 py-2 font-bold text-white text-sm w-20">数量</th>
+              <th className="text-right px-3 py-2 font-bold text-white text-sm w-28">単価</th>
+              <th className="text-center px-3 py-2 font-bold text-white text-sm w-20">税率</th>
+              <th className="text-right px-3 py-2 font-bold text-white text-sm w-28">金額</th>
               <th className="w-8"></th>
             </tr>
           </thead>
@@ -162,15 +162,15 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     value={item.description}
                     onChange={(e) => updateItem(i, 'description', e.target.value)}
                     placeholder="品目名（マスタから選択または入力）"
-                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
+                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-sm"
                   />
                   <textarea
                     value={item.details ?? ''}
                     onChange={(e) => updateItem(i, 'details', e.target.value)}
                     placeholder="注釈（任意）"
-                    rows={1}
-                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 resize-none mt-0.5"
-                    style={{ fontSize: '7pt', color: '#727272' }}
+                    rows={Math.max(1, (item.details ?? '').split('\n').length)}
+                    className="w-full border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 resize-none mt-0.5 text-sm"
+                    style={{ color: '#727272' }}
                   />
                 </td>
                 <td className="px-2 py-2">
@@ -180,7 +180,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     step="0.01"
                     value={item.quantity}
                     onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
-                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
+                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-sm"
                   />
                 </td>
                 <td className="px-2 py-2">
@@ -189,14 +189,14 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     min="0"
                     value={item.unitPrice}
                     onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
-                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-[8pt]"
+                    className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-sm"
                   />
                 </td>
                 <td className="px-2 py-2">
                   <select
                     value={item.taxRate}
                     onChange={(e) => updateItem(i, 'taxRate', Number(e.target.value))}
-                    className="w-full border rounded text-center text-xs px-1 py-0.5"
+                    className="w-full border rounded text-center text-sm px-1 py-0.5"
                     style={{ borderColor: '#e3e3e3' }}
                   >
                     {TAX_RATES.map((r) => (
@@ -204,7 +204,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     ))}
                   </select>
                 </td>
-                <td className="px-3 py-2 text-right text-[8pt]">
+                <td className="px-3 py-2 text-right text-sm">
                   {formatCurrency(item.amount)}
                 </td>
                 <td className="px-1 py-2">
