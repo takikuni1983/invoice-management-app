@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
-import { formatDate } from '@/lib/utils';
+import { format } from 'date-fns';
 import StatusBadge from '@/components/ui/StatusBadge';
 import DeleteButton from '@/components/ui/DeleteButton';
-import SimpleDocPreview from '@/components/documents/SimpleDocPreview';
+import DocumentPreview from '@/components/documents/DocumentPreview';
 import { Edit, Download } from 'lucide-react';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +26,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!order) notFound();
 
   return (
-    <div className="max-w-3xl space-y-4">
+    <div className="max-w-[794px] space-y-4">
       {/* アクションバー */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -55,26 +55,29 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      <SimpleDocPreview
+      <DocumentPreview
         title="発注請書"
         docNumber={order.orderNumber}
-        date={order.orderDate}
+        dateText={format(order.orderDate, 'yyyy年M月d日')}
+        toLabel="送付先"
         customerName={order.customer.companyName}
         lead="下記の通り発注を承りました。"
         infoRows={[
           { label: '案件名', value: order.subject },
-          { label: '納期', value: order.deliveryDate ? formatDate(order.deliveryDate.toISOString()) : null },
+          { label: '納期', value: order.deliveryDate ? format(order.deliveryDate, 'yyyy年M月d日') : null },
           { label: '納入場所', value: order.deliveryPlace },
           { label: '支払条件', value: order.paymentTerms },
           ...order.customFields.map(f => ({ label: f.label, value: f.value })),
         ]}
         totalLabel="発注金額"
+        itemHeader="納品物 & 詳細"
+        showTaxColumn={false}
         lineItems={order.lineItems}
         subtotal={order.subtotal}
         taxAmount={order.taxAmount}
         discount={order.discount ?? 0}
         total={order.totalAmount}
-        notes={order.notes}
+        sections={[{ label: '備考', text: order.notes, variant: 'note' }]}
         companyInfo={companyInfo}
       />
     </div>

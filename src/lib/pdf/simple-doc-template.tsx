@@ -3,6 +3,7 @@ import {
   Document, Page, Text, View, StyleSheet, Font, Image as PdfImage,
 } from '@react-pdf/renderer';
 import path from 'path';
+import { DOC_FONT as F } from '@/lib/doc-fonts';
 import fs from 'fs';
 import { format, parseISO } from 'date-fns';
 import { OrderAcceptance, DeliveryNote, LineItem } from '@/types';
@@ -47,11 +48,11 @@ const s = StyleSheet.create({
   },
 
   topRight: { position: 'absolute', top: 36, right: 40, alignItems: 'flex-end' },
-  docNumber: { fontFamily: 'Inter', fontSize: 9.75, fontWeight: 500, color: C.base, textAlign: 'right' },
-  docDate:   { fontSize: 9.75, color: C.gray, marginTop: 2, textAlign: 'right' },
+  docNumber: { fontFamily: 'Inter', fontSize: F.docNumber, fontWeight: 500, color: C.base, textAlign: 'right' },
+  docDate:   { fontSize: F.docNumber, color: C.gray, marginTop: 2, textAlign: 'right' },
 
   title: {
-    fontSize: 24,
+    fontSize: F.title,
     fontWeight: 500,
     textAlign: 'center',
     color: C.title,
@@ -64,17 +65,17 @@ const s = StyleSheet.create({
   leftCol:  { flex: 1, paddingRight: 30 },
   rightCol: { width: 170 },
 
-  toLabel:   { fontSize: 9, color: C.title, marginBottom: 3 },
-  toCompany: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 18 },
-  lead:      { fontSize: 8, color: C.base, marginBottom: 12 },
+  toLabel:   { fontSize: F.toLabel, color: C.title, marginBottom: 3 },
+  toCompany: { fontSize: F.toCompany, fontWeight: 500, color: C.base, marginBottom: 18 },
+  lead:      { fontSize: F.lead, color: C.base, marginBottom: 12 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
-  cfLabel: { width: 56, fontSize: 9, fontWeight: 400, color: C.title, lineHeight: 1.6 },
-  cfColon: { width: 10, fontSize: 9, color: C.title, lineHeight: 1.6 },
-  cfValue: { flex: 1, fontSize: 9.5, fontWeight: 500, color: C.base, lineHeight: 1.6 },
+  cfLabel: { width: 56, fontSize: F.infoLabel, fontWeight: 400, color: C.title, lineHeight: 1.6 },
+  cfColon: { width: 10, fontSize: F.infoLabel, color: C.title, lineHeight: 1.6 },
+  cfValue: { flex: 1, fontSize: F.infoValue, fontWeight: 500, color: C.base, lineHeight: 1.6 },
 
-  companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
-  companyLine: { fontSize: 7.5, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
+  companyName: { fontSize: F.companyName, fontWeight: 500, color: C.base, marginBottom: 4 },
+  companyLine: { fontSize: F.companyLine, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
 
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
   // 自社情報欄の右端（= 印鑑枠の右端）にそろえて絶対配置（氏名の末尾に少しかぶせる・レイアウトに影響させない）
@@ -93,8 +94,8 @@ const s = StyleSheet.create({
     paddingBottom: 7,
     paddingTop: 4,
   },
-  totalBarLabel: { fontSize: 8, fontWeight: 400, color: C.gray },
-  totalBarValue: { fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: C.base },
+  totalBarLabel: { fontSize: F.totalBarLabel, fontWeight: 400, color: C.gray },
+  totalBarValue: { fontFamily: 'Inter', fontSize: F.totalBarValue, fontWeight: 500, color: C.base },
 
   tableHead: {
     flexDirection: 'row',
@@ -102,7 +103,7 @@ const s = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 6,
   },
-  tableHeadText: { color: C.white, fontSize: 9, fontWeight: 500 },
+  tableHeadText: { color: C.white, fontSize: F.tableHead, fontWeight: 500 },
 
   tableRow: {
     flexDirection: 'row',
@@ -113,8 +114,8 @@ const s = StyleSheet.create({
     backgroundColor: C.white,
   },
 
-  itemName:   { fontSize: 8, fontWeight: 500, color: C.base, marginBottom: 3 },
-  itemDetail: { fontSize: 7, fontWeight: 400, color: C.gray, lineHeight: 1.6 },
+  itemName:   { fontSize: F.itemName, fontWeight: 500, color: C.base, marginBottom: 3 },
+  itemDetail: { fontSize: F.itemDetail, fontWeight: 400, color: C.gray, lineHeight: 1.6 },
 
   colDesc:  { flex: 1 },
   colQty:   { width: 38, textAlign: 'right' },
@@ -125,11 +126,11 @@ const s = StyleSheet.create({
   totalLine:  { flexDirection: 'row', justifyContent: 'flex-end', paddingVertical: 4 },
   totalLineLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
-    color: C.gray, fontSize: 7, fontWeight: 400,
+    color: C.gray, fontSize: F.totalLabel, fontWeight: 400,
   },
   totalLineValue: {
     fontFamily: 'Inter', width: 80, textAlign: 'right', paddingRight: 6,
-    fontSize: 7, color: C.base,
+    fontSize: F.totalValue, color: C.base,
   },
   grandTotalRow: {
     flexDirection: 'row',
@@ -141,21 +142,20 @@ const s = StyleSheet.create({
   },
   grandLabel: {
     width: 110, textAlign: 'right', paddingRight: 12,
-    color: C.base, fontSize: 8, fontWeight: 500,
+    color: C.base, fontSize: F.totalLabel, fontWeight: 500,
   },
   grandValue: {
     fontFamily: 'Inter', width: 80, textAlign: 'right',
-    fontSize: 8, fontWeight: 500, color: C.base,
+    fontSize: F.grandValue, fontWeight: 500, color: C.base,
   },
 
   section:      { marginTop: 16 },
   sectionLabel: {
-    fontSize: 7, fontWeight: 400, color: C.title,
-    borderBottomWidth: 0.5, borderColor: C.border,
-    paddingBottom: 3, marginBottom: 5,
+    fontSize: F.sectionLabel, fontWeight: 400, color: C.title,
+    marginBottom: 4,
   },
   noteBox:  { backgroundColor: '#F9FAFB', padding: 7, borderRadius: 2 },
-  noteText: { fontSize: 7.5, fontWeight: 400, color: C.base, lineHeight: 1.7 },
+  noteText: { fontSize: F.noteText, fontWeight: 400, color: C.base, lineHeight: 1.7 },
 });
 
 // ── ユーティリティ ───────────────────────────────────────────
@@ -297,9 +297,9 @@ export function SimpleDocPDF({
                 <Text style={s.itemName}>{item.description}</Text>
                 {item.details ? <Text style={s.itemDetail}>{item.details}</Text> : null}
               </View>
-              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtQty(item.quantity)}</Text>
-              <Text style={[s.colPrice, { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.unitPrice)}</Text>
-              <Text style={[s.colAmt,   { fontFamily: 'Inter', fontSize: 8, color: C.base }]}>{fmtNum(item.amount)}</Text>
+              <Text style={[s.colQty,   { fontFamily: 'Inter', fontSize: F.cell, color: C.base }]}>{fmtQty(item.quantity)}</Text>
+              <Text style={[s.colPrice, { fontFamily: 'Inter', fontSize: F.cell, color: C.base }]}>{fmtNum(item.unitPrice)}</Text>
+              <Text style={[s.colAmt,   { fontFamily: 'Inter', fontSize: F.cell, color: C.base }]}>{fmtNum(item.amount)}</Text>
             </View>
           ))}
         </View>
