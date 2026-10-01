@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { resolveNumberForUpdate, numberErrorResponse } from '@/lib/numbering';
+import { resolveNumberForUpdate } from '@/lib/numbering';
+import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
 const include = {
@@ -53,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
       include,
     });
-  }).catch(numberErrorResponse);
+  }).catch(apiErrorResponse);
   if (result instanceof Response) return result;
 
   return NextResponse.json(result);

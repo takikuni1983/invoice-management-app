@@ -9,6 +9,7 @@ import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFie
 import DiscountTotal from '@/components/forms/DiscountTotal';
 import { useMasterItems } from '@/components/forms/useMasterItems';
 import { formatDateInput, DELIVERY_STATUS_LABELS } from '@/lib/utils';
+import { responseError } from '@/lib/response-error';
 
 // 請求書から作成するときは invoiceId 付きの未保存データを note に渡す
 export type DeliveryNoteFormInitial = Partial<Omit<DeliveryNote, 'id'>> & { id?: number };
@@ -84,8 +85,7 @@ export default function DeliveryNoteForm({ note, customers, defaultCustomerId, s
         }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? '保存に失敗しました');
+        throw new Error(await responseError(res, '保存に失敗しました'));
       }
       const saved = await res.json();
       router.push(`/delivery-notes/${saved.id}`);

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
-import { resolveNumber, numberErrorResponse } from '@/lib/numbering';
+import { resolveNumber } from '@/lib/numbering';
+import { apiErrorResponse } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
         customFields: { orderBy: { sortOrder: 'asc' } },
       },
     });
-  }).catch(numberErrorResponse);
+  }).catch(apiErrorResponse);
   if (result instanceof Response) return result;
 
   return NextResponse.json(result, { status: 201 });

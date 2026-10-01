@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { responseError } from '@/lib/response-error';
 
 interface Row {
   docType: string;
@@ -57,8 +58,8 @@ export default function NumberingSettingsPage() {
           docType: r.docType, prefix: r.prefix, lastNumber: Number(r.lastNumber), digits: Number(r.digits),
         }))),
       });
+      if (!res.ok) throw new Error(await responseError(res));
       const d = await res.json();
-      if (!res.ok) throw new Error(d.error ?? '保存に失敗しました');
       setRows(d);
       setLoaded(d);
       setSaved(true);

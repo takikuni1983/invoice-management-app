@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { DOC_TYPES, DocType, getNumberConfig, nextNumber } from '@/lib/numbering';
+import { apiErrorResponse } from '@/lib/api-error';
 
 // DB を毎回読む（本番ビルドで静的化されて PUT が 405 になるのを防ぐ）
 export const dynamic = 'force-dynamic';
@@ -42,15 +43,18 @@ export async function PUT(req: NextRequest) {
     rows.push({ docType: r.docType, prefix: r.prefix, lastNumber, digits });
   }
 
-  await prisma.$transaction(
-    rows.map((r) =>
-      prisma.numberSetting.upsert({
-        where: { docType: r.docType },
-        create: r,
-        update: { prefix: r.prefix, lastNumber: r.lastNumber, digits: r.digits },
-      }),
-    ),
-  );
-
-  return NextResponse.json(await listSettings());
+  try {
+    await prisma.$transaction(
+      rows.map((r) =>
+        prisma.numberSetting.upsert({
+          where: { docType: r.docType },
+          create: r,
+          update: { prefix: r.prefix, lastNumber: r.lastNumber, digits: r.digits },
+        }),
+      ),
+    );
+    return NextResponse.json(await listSettings());
+  } catch (err) {
+    return apiErrorResponse(err);
+  }
 }

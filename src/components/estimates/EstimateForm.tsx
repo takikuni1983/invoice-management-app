@@ -9,6 +9,7 @@ import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFie
 import { useMasterItems } from '@/components/forms/useMasterItems';
 import DiscountTotal from '@/components/forms/DiscountTotal';
 import { formatDateInput, ESTIMATE_STATUS_LABELS } from '@/lib/utils';
+import { responseError } from '@/lib/response-error';
 
 interface Props {
   estimate?: Estimate;
@@ -75,8 +76,7 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId, s
         }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? '保存に失敗しました');
+        throw new Error(await responseError(res, '保存に失敗しました'));
       }
       const saved = await res.json();
       router.push(`/estimates/${saved.id}`);

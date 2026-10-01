@@ -9,6 +9,7 @@ import CustomFieldsEditor, { CustomFieldRow } from '@/components/forms/CustomFie
 import DiscountTotal from '@/components/forms/DiscountTotal';
 import { useMasterItems } from '@/components/forms/useMasterItems';
 import { formatDateInput, ORDER_STATUS_LABELS } from '@/lib/utils';
+import { responseError } from '@/lib/response-error';
 
 // 見積書から作成するときは estimateId 付きの未保存データを order に渡す
 export type OrderFormInitial = Partial<Omit<OrderAcceptance, 'id'>> & { id?: number };
@@ -86,8 +87,7 @@ export default function OrderForm({ order, customers, defaultCustomerId, suggest
         }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? '保存に失敗しました');
+        throw new Error(await responseError(res, '保存に失敗しました'));
       }
       const saved = await res.json();
       router.push(`/orders/${saved.id}`);

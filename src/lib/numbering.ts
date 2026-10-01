@@ -72,7 +72,11 @@ async function findIdByNumber(db: Db, type: DocType, number: string): Promise<nu
 
 /** 保存済みの設定。なければ既存の番号から推定する（推定値は保存しない） */
 export async function getNumberConfig(db: Db, type: DocType): Promise<NumberConfig> {
-  const saved = await db.numberSetting.findUnique({ where: { docType: type } });
+  const saved = await db.numberSetting.findUnique({ where: { docType: type } }).catch((err) => {
+    // DB の更新前（NumberSetting テーブルがない）でも、読み取りは既存の番号からの推定で続ける
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2021') return null;
+    throw err;
+  });
   if (saved) return { prefix: saved.prefix, lastNumber: saved.lastNumber, digits: saved.digits };
 
   const prefix = DOC_TYPES.find(d => d.type === type)!.defaultPrefix;
@@ -141,12 +145,4 @@ export async function resolveNumberForUpdate(
   const number = typeof requested === 'string' ? requested.trim() : '';
   if (!number) return undefined;
   return resolveNumber(db, type, number, selfId);
-}
-
-/** API ルートで NumberTakenError を 400 にする */
-export function numberErrorResponse(err: unknown) {
-  if (err instanceof NumberTakenError) {
-    return Response.json({ error: err.message }, { status: 400 });
-  }
-  throw err;
 }

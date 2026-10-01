@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Customer } from '@/types';
+import { responseError } from '@/lib/response-error';
 
 interface Props {
   customer?: Customer;
@@ -42,8 +43,7 @@ export default function CustomerForm({ customer }: Props) {
         body: JSON.stringify(form),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? '保存に失敗しました');
+        throw new Error(await responseError(res, '保存に失敗しました'));
       }
       router.push('/customers');
       router.refresh();

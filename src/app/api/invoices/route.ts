@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { resolveNumber, numberErrorResponse } from '@/lib/numbering';
+import { resolveNumber } from '@/lib/numbering';
+import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
 export async function GET(req: NextRequest) {
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     return invoice;
-  }).catch(numberErrorResponse);
+  }).catch(apiErrorResponse);
   if (result instanceof Response) return result;
 
   return NextResponse.json(result, { status: 201 });
