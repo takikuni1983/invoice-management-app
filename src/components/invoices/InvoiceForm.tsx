@@ -33,7 +33,6 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId, sug
     subject: invoice?.subject ?? '',
     notes: invoice?.notes ?? '',
     terms: invoice?.terms ?? '',
-    bankInfo: invoice?.bankInfo ?? '',
   });
   const [taxRate] = useState(invoice?.taxRate ?? 10);
   const [lineItems, setLineItems] = useState<LineItemRow[]>(
@@ -178,17 +177,7 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId, sug
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 space-y-4">
-        <h3 className="font-medium text-gray-900 border-b pb-2">振込先・備考</h3>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">振込先情報</label>
-          <textarea
-            value={form.bankInfo}
-            onChange={set('bankInfo')}
-            rows={2}
-            placeholder="〇〇銀行 〇〇支店 普通 1234567 カブシキガイシャ〇〇"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <h3 className="font-medium text-gray-900 border-b pb-2">備考・条件</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">備考</label>
           <textarea

@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const { customerId, status, issueDate, dueDate, subject, notes, terms, bankInfo, taxRate, lineItems, paidAt, discount, customFields } = body;
+  const { customerId, status, issueDate, dueDate, subject, notes, terms, taxRate, lineItems, paidAt, discount, customFields } = body;
 
   const result = await prisma.$transaction(async (tx) => {
     const invoiceNumber = await resolveNumberForUpdate(tx, 'invoice', body.invoiceNumber, Number(id));
@@ -43,7 +43,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         subject,
         notes,
         terms,
-        bankInfo,
         taxRate: rate,
         ...totals,
         paidAt: paidAt ? new Date(paidAt) : null,

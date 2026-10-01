@@ -87,7 +87,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         discount={invoice.discount ?? 0}
         total={invoice.totalAmount}
         sections={[
-          { label: '振込先', text: invoice.bankInfo, variant: 'bank' },
+          // 振込先は 設定 > 自社情報 のものを全請求書に表示
+          { label: '振込先', text: companyInfo?.bankInfo, variant: 'bank' },
           { label: '備考', text: invoice.notes, variant: 'note' },
           { label: '取引条件', text: invoice.terms, variant: 'plain' },
         ]}

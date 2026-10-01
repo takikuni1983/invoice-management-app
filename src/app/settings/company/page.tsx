@@ -6,7 +6,7 @@ import { trimImageMargins } from '@/lib/trim-image';
 export default function CompanySettingsPage() {
   const [form, setForm] = useState({
     companyName: '', ownerName: '', postalCode: '', address: '',
-    phone: '', registrationNumber: '', stampImage: '',
+    phone: '', registrationNumber: '', stampImage: '', bankInfo: '',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -22,6 +22,7 @@ export default function CompanySettingsPage() {
         phone: d.phone ?? '',
         registrationNumber: d.registrationNumber ?? '',
         stampImage: d.stampImage ?? '',
+        bankInfo: d.bankInfo ?? '',
       });
     }).catch(() => {});
   }, []);
@@ -73,6 +74,19 @@ export default function CompanySettingsPage() {
         {field('住所', 'address', '愛知県名古屋市名東区極楽3-296')}
         {field('電話番号', 'phone', '090-0000-0000')}
         {field('登録番号（インボイス）', 'registrationNumber', 'T1234567890123')}
+
+        {/* 振込先: すべての請求書に表示する */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">振込先</label>
+          <textarea
+            value={form.bankInfo}
+            onChange={(e) => setForm(f => ({ ...f, bankInfo: e.target.value }))}
+            rows={3}
+            placeholder={'〇〇銀行 〇〇支店 普通 1234567\nカ）〇〇〇〇'}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="mt-1 text-xs text-gray-400">すべての請求書（画面・PDF）に表示されます。改行もそのまま反映されます。</p>
+        </div>
 
         {/* 電子印鑑 */}
         <div>

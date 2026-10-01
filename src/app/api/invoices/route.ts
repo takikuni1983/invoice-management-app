@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { customerId, estimateId, status, issueDate, dueDate, subject, notes, terms, bankInfo, taxRate, lineItems, discount, customFields } = body;
+  const { customerId, estimateId, status, issueDate, dueDate, subject, notes, terms, taxRate, lineItems, discount, customFields } = body;
 
   if (!customerId || !issueDate) {
     return NextResponse.json({ error: '顧客と発行日は必須です' }, { status: 400 });
@@ -64,7 +64,6 @@ export async function POST(req: NextRequest) {
         subject: subject ?? '',
         notes: notes ?? '',
         terms: terms ?? '',
-        bankInfo: bankInfo ?? '',
         taxRate: rate,
         ...totals,
         lineItems: { create: items },

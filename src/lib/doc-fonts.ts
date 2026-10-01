@@ -6,7 +6,7 @@ export const DOC_FONT = {
   docNumber:     9.75, // 右上の番号・日付（13px）
   toLabel:       9,    // 「送付先」「請求先」（12px）
   toCompany:     10,   // 〇〇 御中
-  lead:          8,    // 「下記の通り〜」
+  lead:          9,    // 「下記の通り発注を承りました。」などの文言（発注請書・納品書）
   infoLabel:     9,    // 件名・カスタム項目の見出し（12px）
   infoValue:     10,   // 件名・カスタム項目の値
   companyName:   9.75, // 自社名・氏名

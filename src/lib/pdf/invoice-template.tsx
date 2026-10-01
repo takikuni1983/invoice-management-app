@@ -183,6 +183,7 @@ interface Props {
     postalCode?: string | null; address?: string | null;
     phone?: string | null; registrationNumber?: string | null;
     stampImage?: string | null;
+    bankInfo?: string | null;
   };
 }
 
@@ -336,10 +337,11 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
           </View>
         </View>
 
-        {invoice.bankInfo && (
+        {/* 振込先は 設定 > 自社情報 のものを全請求書に表示 */}
+        {companyInfo?.bankInfo && (
           <View style={s.section}>
             <Text style={s.sectionLabel}>振込先</Text>
-            <Text style={s.bankText}>{invoice.bankInfo}</Text>
+            <Text style={s.bankText}>{companyInfo.bankInfo}</Text>
           </View>
         )}
         {invoice.notes && (

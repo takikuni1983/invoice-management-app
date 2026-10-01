@@ -23,6 +23,7 @@ model CompanyInfo {
   phone              String?
   registrationNumber String?
   stampImage         String?
+  bankInfo           String?
   updatedAt          DateTime @updatedAt
 }
 
