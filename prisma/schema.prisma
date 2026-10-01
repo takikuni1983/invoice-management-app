@@ -247,3 +247,12 @@ model DeliveryNoteCustomField {
   value          String       @default("")
   sortOrder      Int          @default(0)
 }
+
+// 書類番号の採番設定（docType: estimate / invoice / order / delivery）
+model NumberSetting {
+  docType    String   @id
+  prefix     String
+  lastNumber Int      @default(0)
+  digits     Int      @default(4)
+  updatedAt  DateTime @updatedAt
+}

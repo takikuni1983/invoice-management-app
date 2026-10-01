@@ -243,7 +243,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           {invoice.bankInfo && (
             <div className="mt-6">
               <p className="text-xs border-b pb-1 mb-2" style={{ color: '#817D7D', borderColor: '#e3e3e3' }}>振込先</p>
-              <p className="text-sm bg-blue-50 rounded p-3 leading-relaxed">{invoice.bankInfo}</p>
+              <p className="text-sm text-left leading-relaxed whitespace-pre-line">{invoice.bankInfo}</p>
             </div>
           )}
           {/* 備考・取引条件 */}

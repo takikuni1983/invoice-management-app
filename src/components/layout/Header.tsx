@@ -17,6 +17,9 @@ const pageTitles: Record<string, string> = {
   '/delivery-notes/new': '納品書を新規作成',
   '/sales': '売上管理',
   '/items': '品目マスタ',
+  '/settings/company': '設定',
+  '/settings/fields': '設定',
+  '/settings/numbering': '設定',
 };
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {

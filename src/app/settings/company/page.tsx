@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { trimImageMargins } from '@/lib/trim-image';
 
 export default function CompanySettingsPage() {
   const [form, setForm] = useState({
@@ -32,8 +33,10 @@ export default function CompanySettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      setForm(f => ({ ...f, stampImage: reader.result as string }));
+    reader.onload = async () => {
+      // 周囲の余白を切り取る（PDF で印鑑の右端を枠にそろえるため）
+      const trimmed = await trimImageMargins(reader.result as string);
+      setForm(f => ({ ...f, stampImage: trimmed }));
     };
     reader.readAsDataURL(file);
   }
@@ -98,7 +101,7 @@ export default function CompanySettingsPage() {
                 onChange={handleFileChange}
                 className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
               />
-              <p className="mt-1 text-xs text-gray-400">PNG推奨（透過背景）。見積書・請求書の印鑑欄に表示されます。</p>
+              <p className="mt-1 text-xs text-gray-400">PNG推奨（透過背景）。周囲の余白は自動で切り取ります。各書類の自社名の右に表示されます。</p>
             </div>
           </div>
         </div>

@@ -1,14 +1,26 @@
 // 見積・請求・発注請書・納品書の番号の自動採番と重複チェック
+//
+// 採番ルール（設定 > 番号設定 で変更できる）
+//   次の番号 = 接頭辞 + (最新の番号 + 1) を桁数でゼロ埋め   例: EST- / 737 / 6桁 → EST-000738
+//   - 自動で振った番号、または手入力した同じ形式でより大きい番号で「最新の番号」を更新する
+//   - 作ろうとした番号が既に使われていたら、空いている番号まで進める
+//   - 設定が未保存のときは、既存の番号から最大値と桁数を推定する
 import { Prisma, PrismaClient } from '@prisma/client';
 
 export type DocType = 'estimate' | 'invoice' | 'order' | 'delivery';
 
-export const DOC_PREFIX: Record<DocType, string> = {
-  estimate: 'EST',
-  invoice: 'INV',
-  order: 'ORD',
-  delivery: 'DN',
-};
+export const DOC_TYPES: { type: DocType; label: string; defaultPrefix: string }[] = [
+  { type: 'estimate', label: '見積書', defaultPrefix: 'EST-' },
+  { type: 'order', label: '発注請書', defaultPrefix: 'ORD-' },
+  { type: 'invoice', label: '請求書', defaultPrefix: 'INV-' },
+  { type: 'delivery', label: '納品書', defaultPrefix: 'DN-' },
+];
+
+export interface NumberConfig {
+  prefix: string;
+  lastNumber: number;
+  digits: number;
+}
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -18,25 +30,18 @@ export class NumberTakenError extends Error {
   }
 }
 
-/**
- * 既存の番号のうち「接頭辞-数字」の形式のものから最大値を探し、+1 した番号を返す。
- * 桁数は最大の番号に合わせる（Zoho から取り込んだ EST-000737 → EST-000738）。
- * 手入力した形式の違う番号は採番の対象外。
- */
-export function nextNumberFrom(prefix: string, numbers: string[]): string {
-  const re = new RegExp(`^${prefix}-(\\d+)$`);
-  let max = 0;
-  let width = 4;
-  for (const n of numbers) {
-    const m = re.exec(n);
-    if (!m) continue;
-    const v = parseInt(m[1], 10);
-    if (v > max || (v === max && m[1].length > width)) {
-      max = v;
-      width = Math.max(4, m[1].length);
-    }
-  }
-  return `${prefix}-${String(max + 1).padStart(width, '0')}`;
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** 「接頭辞 + 数字」の形式なら数字部分を返す */
+function parseNumber(prefix: string, number: string): { value: number; width: number } | null {
+  const m = new RegExp(`^${escapeRegExp(prefix)}(\\d+)$`).exec(number);
+  return m ? { value: parseInt(m[1], 10), width: m[1].length } : null;
+}
+
+export function formatNumber(config: NumberConfig, value: number): string {
+  return `${config.prefix}${String(value).padStart(config.digits, '0')}`;
 }
 
 async function existingNumbers(db: Db, type: DocType): Promise<string[]> {
@@ -65,8 +70,42 @@ async function findIdByNumber(db: Db, type: DocType, number: string): Promise<nu
   }
 }
 
+/** 保存済みの設定。なければ既存の番号から推定する（推定値は保存しない） */
+export async function getNumberConfig(db: Db, type: DocType): Promise<NumberConfig> {
+  const saved = await db.numberSetting.findUnique({ where: { docType: type } });
+  if (saved) return { prefix: saved.prefix, lastNumber: saved.lastNumber, digits: saved.digits };
+
+  const prefix = DOC_TYPES.find(d => d.type === type)!.defaultPrefix;
+  let lastNumber = 0;
+  let digits = 4;
+  for (const n of await existingNumbers(db, type)) {
+    const p = parseNumber(prefix, n);
+    if (p && (p.value > lastNumber || (p.value === lastNumber && p.width > digits))) {
+      lastNumber = p.value;
+      digits = Math.max(4, p.width);
+    }
+  }
+  return { prefix, lastNumber, digits };
+}
+
+async function saveLastNumber(db: Db, type: DocType, config: NumberConfig, lastNumber: number) {
+  await db.numberSetting.upsert({
+    where: { docType: type },
+    create: { docType: type, prefix: config.prefix, digits: config.digits, lastNumber },
+    update: { lastNumber },
+  });
+}
+
+/** 次に自動で振られる番号（既に使われている番号は飛ばす） */
+async function peekNext(db: Db, type: DocType): Promise<{ config: NumberConfig; value: number; number: string }> {
+  const config = await getNumberConfig(db, type);
+  let value = config.lastNumber + 1;
+  while ((await findIdByNumber(db, type, formatNumber(config, value))) !== null) value++;
+  return { config, value, number: formatNumber(config, value) };
+}
+
 export async function nextNumber(db: Db, type: DocType): Promise<string> {
-  return nextNumberFrom(DOC_PREFIX[type], await existingNumbers(db, type));
+  return (await peekNext(db, type)).number;
 }
 
 /**
@@ -77,9 +116,21 @@ export async function resolveNumber(
   db: Db, type: DocType, requested: unknown, selfId?: number,
 ): Promise<string> {
   const number = typeof requested === 'string' ? requested.trim() : '';
-  if (!number) return nextNumber(db, type);
+
+  if (!number) {
+    const next = await peekNext(db, type);
+    await saveLastNumber(db, type, next.config, next.value);
+    return next.number;
+  }
+
   const id = await findIdByNumber(db, type, number);
   if (id !== null && id !== selfId) throw new NumberTakenError(number);
+
+  // 手入力でも同じ形式でより大きい番号なら「最新の番号」を進める
+  const config = await getNumberConfig(db, type);
+  const parsed = parseNumber(config.prefix, number);
+  if (parsed && parsed.value > config.lastNumber) await saveLastNumber(db, type, config, parsed.value);
+
   return number;
 }
 

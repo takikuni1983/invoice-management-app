@@ -46,9 +46,9 @@ const s = StyleSheet.create({
     lineHeight: 1.6,
   },
 
-  topRight: { position: 'absolute', top: 36, right: 40, textAlign: 'right' },
-  docNumber: { fontFamily: 'Inter', fontSize: 9.75, fontWeight: 500, color: C.base },
-  docDate:   { fontFamily: 'Inter', fontSize: 9.75, color: C.gray, marginTop: 2 },
+  topRight: { position: 'absolute', top: 36, right: 40, alignItems: 'flex-end' },
+  docNumber: { fontFamily: 'Inter', fontSize: 9.75, fontWeight: 500, color: C.base, textAlign: 'right' },
+  docDate:   { fontFamily: 'Inter', fontSize: 9.75, color: C.gray, marginTop: 2, textAlign: 'right' },
 
   title: {
     fontSize: 24,
@@ -76,9 +76,8 @@ const s = StyleSheet.create({
   companyLine: { fontSize: 7.5, fontWeight: 400, color: C.gray, marginBottom: 2, lineHeight: 1.5 },
 
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
-  // 自社情報欄の右端を基準に絶対配置（氏名の末尾に少しかぶせる・レイアウトに影響させない）
-  // right: -14 で用紙の端から約9mm内側に収める（プリンタの印刷可能範囲）
-  stampImage:  { position: 'absolute', right: -14, top: 2, width: 60, height: 60, objectFit: 'contain' },
+  // 自社情報欄の右端（= 印鑑枠の右端）にそろえて絶対配置（氏名の末尾に少しかぶせる・レイアウトに影響させない）
+  stampImage:  { position: 'absolute', right: 0, top: 2, width: 60, height: 60, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -156,7 +155,8 @@ const s = StyleSheet.create({
   },
   noteBox:  { backgroundColor: '#F9FAFB', padding: 7, borderRadius: 2 },
   noteText: { fontSize: 7.5, fontWeight: 400, color: C.base, lineHeight: 1.7 },
-  bankBox:  { backgroundColor: '#EFF6FF', padding: 7, borderRadius: 2 },
+  // 振込先: 背景なし・左揃え・14px（10.5pt）
+  bankText: { fontSize: 10.5, fontWeight: 400, color: C.base, lineHeight: 1.6, textAlign: 'left' },
 });
 
 // ── ユーティリティ ───────────────────────────────────────────
@@ -338,7 +338,7 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
         {invoice.bankInfo && (
           <View style={s.section}>
             <Text style={s.sectionLabel}>振込先</Text>
-            <View style={s.bankBox}><Text style={s.noteText}>{invoice.bankInfo}</Text></View>
+            <Text style={s.bankText}>{invoice.bankInfo}</Text>
           </View>
         )}
         {invoice.notes && (
