@@ -5,7 +5,6 @@ import FitToWidth from '@/components/ui/FitToWidth';
 interface Props {
   title: string;
   docNumber: string;
-  dateLabel: string;
   date: Date;
   customerName: string;
   lead: string;
@@ -28,7 +27,7 @@ interface Props {
 }
 
 export default function SimpleDocPreview({
-  title, docNumber, dateLabel, date, customerName, lead, infoRows, totalLabel,
+  title, docNumber, date, customerName, lead, infoRows, totalLabel,
   lineItems, subtotal, taxAmount, discount, total, notes, companyInfo,
 }: Props) {
   const taxRates = Array.from(new Set(lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
@@ -42,7 +41,7 @@ export default function SimpleDocPreview({
       <div className="flex justify-end mb-2">
         <div className="text-right">
           <p className="font-medium text-[13px]">{docNumber}</p>
-          <p className="text-[13px] text-gray-500">{dateLabel} : {formatDate(date.toISOString())}</p>
+          <p className="text-[13px] text-gray-500">{formatDate(date.toISOString())}</p>
         </div>
       </div>
 
@@ -53,6 +52,7 @@ export default function SimpleDocPreview({
         {/* 左カラム: 発注元 + 文言 + 案件情報 + 発注金額バー */}
         <div style={{ flex: '0 1 55%' }} className="flex flex-col">
           <div className="flex-1">
+            <p className="text-xs mb-1" style={{ color: '#817D7D' }}>送付先</p>
             <p className="text-sm font-medium mb-6">{customerName} 御中</p>
             <p className="text-sm mb-4">{lead}</p>
 

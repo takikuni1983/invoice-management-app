@@ -64,12 +64,13 @@ const s = StyleSheet.create({
   leftCol:  { flex: 1, paddingRight: 30 },
   rightCol: { width: 170 },
 
+  toLabel:   { fontSize: 9, color: C.title, marginBottom: 3 },
   toCompany: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 18 },
   lead:      { fontSize: 8, color: C.base, marginBottom: 12 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
-  cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
-  cfColon: { width: 10, fontSize: 8, color: C.title, lineHeight: 1.6 },
+  cfLabel: { width: 56, fontSize: 9, fontWeight: 400, color: C.title, lineHeight: 1.6 },
+  cfColon: { width: 10, fontSize: 9, color: C.title, lineHeight: 1.6 },
   cfValue: { flex: 1, fontSize: 9.5, fontWeight: 500, color: C.base, lineHeight: 1.6 },
 
   companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
@@ -77,7 +78,8 @@ const s = StyleSheet.create({
 
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
   // 自社情報欄の右端（= 印鑑枠の右端）にそろえて絶対配置（氏名の末尾に少しかぶせる・レイアウトに影響させない）
-  stampImage:  { position: 'absolute', right: 0, top: 2, width: 60, height: 60, objectFit: 'contain' },
+  // 自社情報より先に描画してテキストの背面に置く
+  stampImage:  { position: 'absolute', right: 0, top: 12, width: 48, height: 48, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -183,7 +185,6 @@ type CompanyInfo = {
 export interface SimpleDocProps {
   title: string;
   docNumber: string;
-  dateLabel: string;
   date: Date | string;
   customerName?: string;
   lead: string;
@@ -210,7 +211,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 }
 
 export function SimpleDocPDF({
-  title, docNumber, dateLabel, date, customerName, lead, infoRows, totalLabel,
+  title, docNumber, date, customerName, lead, infoRows, totalLabel,
   lineItems, subtotal, taxAmount, discount, total, notes, companyInfo,
 }: SimpleDocProps) {
   const taxRates = Array.from(new Set(lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
@@ -223,7 +224,7 @@ export function SimpleDocPDF({
         {/* 右上 */}
         <View style={s.topRight}>
           <Text style={s.docNumber}>{docNumber}</Text>
-          <Text style={s.docDate}>{dateLabel} : {fmtDate(date)}</Text>
+          <Text style={s.docDate}>{fmtDate(date)}</Text>
         </View>
 
         {/* タイトル */}
@@ -233,6 +234,7 @@ export function SimpleDocPDF({
         <View style={s.twoCol}>
           {/* 左: 宛先 + 文言 + 案件情報 */}
           <View style={s.leftCol}>
+            <Text style={s.toLabel}>送付先</Text>
             <Text style={s.toCompany}>{customerName} 御中</Text>
             <Text style={s.lead}>{lead}</Text>
 
@@ -243,15 +245,15 @@ export function SimpleDocPDF({
 
           {/* 右: 自社情報 + 印鑑 */}
           <View style={s.rightCol}>
+            {companyInfo?.stampImage ? (
+              <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
+            ) : null}
             {companyInfo?.companyName ? (
               <>
                 <View style={s.nameRow}>
                   <Text style={[s.companyName, { flexShrink: 1 }]}>
                     {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
                   </Text>
-                  {companyInfo.stampImage ? (
-                    <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
-                  ) : null}
                 </View>
                 {companyInfo.postalCode && <Text style={s.companyLine}>{companyInfo.postalCode}</Text>}
                 {companyInfo.address    && <Text style={s.companyLine}>{companyInfo.address}</Text>}
@@ -340,7 +342,6 @@ export function OrderAcceptancePDF({ order, companyInfo }: { order: OrderAccepta
     <SimpleDocPDF
       title="発注請書"
       docNumber={order.orderNumber}
-      dateLabel="発注日"
       date={order.orderDate}
       customerName={order.customer?.companyName}
       lead="下記の通り発注を承りました。"
@@ -368,7 +369,6 @@ export function DeliveryNotePDF({ note, companyInfo }: { note: DeliveryNote; com
     <SimpleDocPDF
       title="納品書"
       docNumber={note.deliveryNumber}
-      dateLabel="納品日"
       date={note.deliveryDate}
       customerName={note.customer?.companyName}
       lead="下記の通り納品致します。"

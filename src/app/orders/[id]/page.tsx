@@ -58,7 +58,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <SimpleDocPreview
         title="発注請書"
         docNumber={order.orderNumber}
-        dateLabel="発注日"
         date={order.orderDate}
         customerName={order.customer.companyName}
         lead="下記の通り発注を承りました。"

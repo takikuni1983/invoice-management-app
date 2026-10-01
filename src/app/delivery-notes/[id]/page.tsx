@@ -58,7 +58,6 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
       <SimpleDocPreview
         title="納品書"
         docNumber={note.deliveryNumber}
-        dateLabel="納品日"
         date={note.deliveryDate}
         customerName={note.customer.companyName}
         lead="下記の通り納品致します。"

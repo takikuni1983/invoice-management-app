@@ -64,12 +64,12 @@ const s = StyleSheet.create({
   leftCol:  { flex: 1, paddingRight: 30 },
   rightCol: { width: 170 },
 
-  toLabel:   { fontSize: 7, color: C.title, marginBottom: 3 },
+  toLabel:   { fontSize: 9, color: C.title, marginBottom: 3 },
   toCompany: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 18 },
 
   cfRow:   { flexDirection: 'row', marginBottom: 5 },
-  cfLabel: { width: 56, fontSize: 8, fontWeight: 400, color: C.title, lineHeight: 1.6 },
-  cfColon: { width: 10, fontSize: 8, color: C.title, lineHeight: 1.6 },
+  cfLabel: { width: 56, fontSize: 9, fontWeight: 400, color: C.title, lineHeight: 1.6 },
+  cfColon: { width: 10, fontSize: 9, color: C.title, lineHeight: 1.6 },
   cfValue: { flex: 1, fontSize: 9.5, fontWeight: 500, color: C.base, lineHeight: 1.6 },
 
   companyName: { fontSize: 9.5, fontWeight: 500, color: C.base, marginBottom: 4 },
@@ -77,7 +77,8 @@ const s = StyleSheet.create({
 
   nameRow:   { flexDirection: 'row', alignItems: 'flex-start' },
   // 自社情報欄の右端（= 印鑑枠の右端）にそろえて絶対配置（氏名の末尾に少しかぶせる・レイアウトに影響させない）
-  stampImage:  { position: 'absolute', right: 0, top: 2, width: 60, height: 60, objectFit: 'contain' },
+  // 自社情報より先に描画してテキストの背面に置く
+  stampImage:  { position: 'absolute', right: 0, top: 12, width: 48, height: 48, objectFit: 'contain' },
 
   stampArea: { flexDirection: 'row', marginTop: 8, height: 44 },
   stampBox:  { flex: 1, borderWidth: 0.75, borderColor: '#9CA3AF' },
@@ -248,15 +249,15 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
 
           {/* 右: 自社情報 + 印鑑 */}
           <View style={s.rightCol}>
+            {companyInfo?.stampImage ? (
+              <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
+            ) : null}
             {companyInfo?.companyName ? (
               <>
                 <View style={s.nameRow}>
                   <Text style={[s.companyName, { flexShrink: 1 }]}>
                     {companyInfo.companyName}{companyInfo.ownerName ? `　${companyInfo.ownerName}` : ''}
                   </Text>
-                  {companyInfo.stampImage ? (
-                    <PdfImage src={companyInfo.stampImage} style={s.stampImage} />
-                  ) : null}
                 </View>
                 {companyInfo.postalCode && <Text style={s.companyLine}>{companyInfo.postalCode}</Text>}
                 {companyInfo.address    && <Text style={s.companyLine}>{companyInfo.address}</Text>}
