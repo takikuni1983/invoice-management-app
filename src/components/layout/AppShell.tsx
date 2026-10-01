@@ -30,7 +30,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenuClick={() => setMenuOpen(true)} />
-        <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
+        {/* overflow-x-clip: 横はみ出しは隠しつつスクロール領域にしない（詳細画面の一覧カラムの sticky をウィンドウ基準で効かせる） */}
+        <main className="flex-1 p-4 md:p-6 overflow-x-clip">{children}</main>
       </div>
     </div>
   );

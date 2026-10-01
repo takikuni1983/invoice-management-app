@@ -154,7 +154,6 @@ const s = StyleSheet.create({
     fontSize: F.sectionLabel, fontWeight: 400, color: C.title,
     marginBottom: 4,
   },
-  noteBox:  { backgroundColor: '#F9FAFB', padding: 7, borderRadius: 2 },
   noteText: { fontSize: F.noteText, fontWeight: 400, color: C.base, lineHeight: 1.7 },
   // 振込先: 背景なし・左揃え・14px（10.5pt）
   bankText: { fontSize: F.bankText, fontWeight: 400, color: C.base, lineHeight: 1.6, textAlign: 'left' },
@@ -347,7 +346,7 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
         {invoice.notes && (
           <View style={s.section}>
             <Text style={s.sectionLabel}>備考</Text>
-            <View style={s.noteBox}><Text style={s.noteText}>{invoice.notes}</Text></View>
+            <Text style={s.noteText}>{invoice.notes}</Text>
           </View>
         )}
         {invoice.terms && (

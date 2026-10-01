@@ -154,7 +154,6 @@ const s = StyleSheet.create({
     fontSize: F.sectionLabel, fontWeight: 400, color: C.title,
     marginBottom: 4,
   },
-  noteBox:  { backgroundColor: '#F9FAFB', padding: 7, borderRadius: 2 },
   noteText: { fontSize: F.noteText, fontWeight: 400, color: C.base, lineHeight: 1.7 },
 });
 
@@ -329,7 +328,7 @@ export function SimpleDocPDF({
         {notes ? (
           <View style={s.section}>
             <Text style={s.sectionLabel}>備考</Text>
-            <View style={s.noteBox}><Text style={s.noteText}>{notes}</Text></View>
+            <Text style={s.noteText}>{notes}</Text>
           </View>
         ) : null}
       </Page>

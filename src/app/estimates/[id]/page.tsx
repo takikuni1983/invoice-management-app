@@ -85,8 +85,8 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         discount={estimate.discount ?? 0}
         total={estimate.totalAmount}
         sections={[
-          { label: '備考', text: estimate.notes, variant: 'note' },
-          { label: '取引条件', text: estimate.terms, variant: 'plain' },
+          { label: '備考', text: estimate.notes, variant: 'text' },
+          { label: '取引条件', text: estimate.terms, variant: 'text' },
         ]}
         companyInfo={companyInfo}
       />

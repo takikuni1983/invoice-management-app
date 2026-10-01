@@ -77,7 +77,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         taxAmount={order.taxAmount}
         discount={order.discount ?? 0}
         total={order.totalAmount}
-        sections={[{ label: '備考', text: order.notes, variant: 'note' }]}
+        sections={[{ label: '備考', text: order.notes, variant: 'text' }]}
         companyInfo={companyInfo}
       />
     </div>

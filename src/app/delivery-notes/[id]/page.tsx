@@ -76,7 +76,7 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
         taxAmount={note.taxAmount}
         discount={note.discount ?? 0}
         total={note.totalAmount}
-        sections={[{ label: '備考', text: note.notes, variant: 'note' }]}
+        sections={[{ label: '備考', text: note.notes, variant: 'text' }]}
         companyInfo={companyInfo}
       />
     </div>

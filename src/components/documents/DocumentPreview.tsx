@@ -12,8 +12,8 @@ const COLOR = { title: '#817D7D', gray: '#727272', border: '#e3e3e3', tableHead:
 export interface PreviewSection {
   label: string;
   text: string | null | undefined;
-  /** note: 背景付き（備考） / plain: 背景なし（取引条件） / bank: 背景なし・14px（振込先） */
-  variant: 'note' | 'plain' | 'bank';
+  /** text: 備考・取引条件 / bank: 振込先（14px） */
+  variant: 'text' | 'bank';
 }
 
 interface Props {
@@ -202,18 +202,12 @@ export default function DocumentPreview({
         {sections.filter(sec => sec.text).map((sec) => (
           <div key={sec.label} style={{ marginTop: '16pt' }}>
             <p style={{ ...docFont('sectionLabel'), color: COLOR.title, marginBottom: '4pt' }}>{sec.label}</p>
-            {sec.variant === 'note' ? (
-              <div style={{ backgroundColor: '#F9FAFB', padding: '7pt', borderRadius: '2pt' }}>
-                <p className="whitespace-pre-line" style={{ ...docFont('noteText'), lineHeight: 1.7 }}>{sec.text}</p>
-              </div>
-            ) : (
-              <p
-                className="whitespace-pre-line text-left"
-                style={{ ...docFont(sec.variant === 'bank' ? 'bankText' : 'noteText'), lineHeight: sec.variant === 'bank' ? 1.6 : 1.7 }}
-              >
-                {sec.text}
-              </p>
-            )}
+            <p
+              className="whitespace-pre-line text-left"
+              style={{ ...docFont(sec.variant === 'bank' ? 'bankText' : 'noteText'), lineHeight: sec.variant === 'bank' ? 1.6 : 1.7 }}
+            >
+              {sec.text}
+            </p>
           </div>
         ))}
       </div>
