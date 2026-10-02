@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
-import StatusBadge from '@/components/ui/StatusBadge';
+import StatusSelect from '@/components/ui/StatusSelect';
 import DeleteButton from '@/components/ui/DeleteButton';
 import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
@@ -32,7 +32,7 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h2 className="text-xl font-medium text-gray-900">{note.deliveryNumber}</h2>
-          <StatusBadge status={note.status} type="delivery" />
+          <StatusSelect id={note.id} status={note.status} type="delivery" />
           {note.invoice && (
             <Link href={`/invoices/${note.invoice.id}`} className="text-xs text-gray-500 hover:underline">
               元請求: {note.invoice.invoiceNumber}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { ESTIMATE_STATUS_LABELS } from '@/lib/utils';
 import { resolveNumberForUpdate } from '@/lib/numbering';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
@@ -66,4 +67,19 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   await prisma.estimate.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
+}
+
+// ステータスだけを変更する（詳細画面のプルダウン）
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { status } = await req.json();
+  if (typeof status !== 'string' || !(status in ESTIMATE_STATUS_LABELS)) {
+    return NextResponse.json({ error: 'ステータスが正しくありません' }, { status: 400 });
+  }
+  try {
+  await prisma.estimate.update({ where: { id: Number(id) }, data: { status } });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return apiErrorResponse(err);
+  }
 }

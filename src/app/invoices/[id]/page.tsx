@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
-import StatusBadge from '@/components/ui/StatusBadge';
+import StatusSelect from '@/components/ui/StatusSelect';
 import DeleteButton from '@/components/ui/DeleteButton';
 import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
@@ -33,7 +33,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h2 className="text-xl font-medium text-gray-900">{invoice.invoiceNumber}</h2>
-          <StatusBadge status={invoice.status} type="invoice" />
+          <StatusSelect id={invoice.id} status={invoice.status} type="invoice" />
           {invoice.deliveryNotes.map((d) => (
             <Link key={d.id} href={`/delivery-notes/${d.id}`} className="text-xs text-gray-500 hover:underline">
               納品書: {d.deliveryNumber}
