@@ -223,19 +223,19 @@ export function EstimatePDF({ estimate, companyInfo }: Props) {
             <Text style={s.toLabel}>送付先</Text>
             <Text style={s.toCompany}>{customer?.companyName} 御中</Text>
 
-            {estimate.expiryDate ? (
-              <View style={s.cfRow}>
-                <Text style={s.cfLabel}>有効期限</Text>
-                <Text style={s.cfColon}> :</Text>
-                <Text style={s.cfValue}> {fmtDate(estimate.expiryDate)}</Text>
-              </View>
-            ) : null}
-
             {estimate.subject ? (
               <View style={s.cfRow}>
                 <Text style={s.cfLabel}>件名</Text>
                 <Text style={s.cfColon}> :</Text>
                 <Text style={s.cfValue}> {estimate.subject}</Text>
+              </View>
+            ) : null}
+
+            {estimate.expiryDate ? (
+              <View style={s.cfRow}>
+                <Text style={s.cfLabel}>有効期限</Text>
+                <Text style={s.cfColon}> :</Text>
+                <Text style={s.cfValue}> {fmtDate(estimate.expiryDate)}</Text>
               </View>
             ) : null}
 

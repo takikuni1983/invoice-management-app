@@ -222,19 +222,19 @@ export function InvoicePDF({ invoice, companyInfo }: Props) {
             <Text style={s.toLabel}>請求先</Text>
             <Text style={s.toCompany}>{customer?.companyName} 御中</Text>
 
-            {invoice.dueDate ? (
-              <View style={s.cfRow}>
-                <Text style={s.cfLabel}>支払期限</Text>
-                <Text style={s.cfColon}> :</Text>
-                <Text style={s.cfValue}> {fmtDate(invoice.dueDate)}</Text>
-              </View>
-            ) : null}
-
             {invoice.subject ? (
               <View style={s.cfRow}>
                 <Text style={s.cfLabel}>件名</Text>
                 <Text style={s.cfColon}> :</Text>
                 <Text style={s.cfValue}> {invoice.subject}</Text>
+              </View>
+            ) : null}
+
+            {invoice.dueDate ? (
+              <View style={s.cfRow}>
+                <Text style={s.cfLabel}>支払期限</Text>
+                <Text style={s.cfColon}> :</Text>
+                <Text style={s.cfValue}> {fmtDate(invoice.dueDate)}</Text>
               </View>
             ) : null}
 

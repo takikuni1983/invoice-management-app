@@ -75,8 +75,8 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         customerName={estimate.customer.companyName}
         customerHref={`/estimates?customerId=${estimate.customerId}`}
         infoRows={[
-          { label: '有効期限', value: estimate.expiryDate ? format(estimate.expiryDate, 'yyyy/MM/dd') : null },
           { label: '件名', value: estimate.subject },
+          { label: '有効期限', value: estimate.expiryDate ? format(estimate.expiryDate, 'yyyy/MM/dd') : null },
           ...estimate.customFields.map(f => ({ label: f.label, value: f.value })),
         ]}
         totalLabel="総額"

@@ -75,10 +75,10 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         customerName={invoice.customer.companyName}
         customerHref={`/invoices?customerId=${invoice.customerId}`}
         infoRows={[
+          { label: '件名', value: invoice.subject },
           { label: '支払期限', value: invoice.dueDate ? format(invoice.dueDate, 'yyyy/MM/dd') : null },
           // 入金日は画面だけに表示（PDF には出さない）
           { label: '入金日', value: invoice.paidAt ? format(invoice.paidAt, 'yyyy/MM/dd') : null, valueClassName: 'text-green-600' },
-          { label: '件名', value: invoice.subject },
           ...invoice.customFields.map(f => ({ label: f.label, value: f.value })),
         ]}
         totalLabel="総額"
