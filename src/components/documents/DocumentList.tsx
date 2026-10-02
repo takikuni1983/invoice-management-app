@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { buildQuery, SortState } from '@/lib/sort';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -38,15 +38,18 @@ interface Props {
   status: string;
   search: string;
   sort: SortState;
+  /** 顧客で絞り込み中（詳細画面の顧客名リンクから来たとき） */
+  customer?: { id: number; name: string } | null;
 }
 
 export const DOCUMENT_SORT_KEYS = ['number', 'customer', 'subject', 'status', 'total'] as const;
 
 export default function DocumentList({
   basePath, deleteType, badgeType, numberLabel, newLabel, newHref, searchPlaceholder, emptyMessage,
-  statusTabs, dateColumns, sourceLabel, rows, status, search, sort,
+  statusTabs, dateColumns, sourceLabel, rows, status, search, sort, customer,
 }: Props) {
-  const params = { status, search };
+  const customerId = customer ? String(customer.id) : undefined;
+  const params = { status, search, customerId };
   const sortParams = sort.key ? { sort: sort.key, dir: sort.dir } : {};
   const colCount = 6 + dateColumns.length + (sourceLabel ? 1 : 0);
   const header = (label: string, key: string, opts: { align?: 'left' | 'right'; firstDir?: 'asc' | 'desc' } = {}) => (
@@ -64,11 +67,12 @@ export default function DocumentList({
             className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-56"
           />
           {status && <input type="hidden" name="status" value={status} />}
+          {customerId && <input type="hidden" name="customerId" value={customerId} />}
           {sort.key && <input type="hidden" name="sort" value={sort.key} />}
           {sort.key && <input type="hidden" name="dir" value={sort.dir} />}
         </form>
         <Link
-          href={newHref ?? `${basePath}/new`}
+          href={newHref ?? `${basePath}/new${customerId ? `?customerId=${customerId}` : ''}`}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 whitespace-nowrap"
         >
           <Plus className="h-4 w-4" />
@@ -76,12 +80,30 @@ export default function DocumentList({
         </Link>
       </div>
 
+      {/* 顧客での絞り込み（解除できる） */}
+      {customer && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-gray-500">顧客で絞り込み中:</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 pl-3 pr-1 py-1">
+            <Link href={`/customers/${customer.id}`} className="font-medium hover:underline">{customer.name}</Link>
+            <Link
+              href={basePath + buildQuery({ status, search, ...sortParams })}
+              className="p-0.5 rounded-full hover:bg-blue-100"
+              aria-label="絞り込みを解除"
+              title="絞り込みを解除"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Link>
+          </span>
+        </div>
+      )}
+
       {/* ステータスタブ */}
       <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
         {statusTabs.map((tab) => (
           <Link
             key={tab.value}
-            href={basePath + buildQuery({ status: tab.value, search, ...sortParams })}
+            href={basePath + buildQuery({ status: tab.value, search, customerId, ...sortParams })}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               status === tab.value
                 ? 'border-blue-500 text-blue-600'

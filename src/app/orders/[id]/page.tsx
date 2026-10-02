@@ -63,6 +63,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         dateText={format(order.orderDate, 'yyyy年M月d日')}
         toLabel="送付先"
         customerName={order.customer.companyName}
+        customerHref={`/orders?customerId=${order.customerId}`}
         lead="下記の通り発注を承りました。"
         infoRows={[
           { label: '案件名', value: order.subject },

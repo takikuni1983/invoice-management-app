@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { EstimatePDF } from '@/lib/pdf/estimate-template';
 import React from 'react';
+import { pdfContentDisposition } from '@/lib/pdf/filename';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,7 +44,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${estimate.estimateNumber}.pdf"`,
+        'Content-Disposition': pdfContentDisposition(estimate.issueDate, estimate.estimateNumber),
       },
     });
   } catch (err: any) {

@@ -73,6 +73,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         dateText={format(invoice.issueDate, 'yyyy/MM/dd')}
         toLabel="請求先"
         customerName={invoice.customer.companyName}
+        customerHref={`/invoices?customerId=${invoice.customerId}`}
         infoRows={[
           { label: '支払期限', value: invoice.dueDate ? format(invoice.dueDate, 'yyyy/MM/dd') : null },
           // 入金日は画面だけに表示（PDF には出さない）

@@ -63,6 +63,7 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
         dateText={format(note.deliveryDate, 'yyyy年M月d日')}
         toLabel="送付先"
         customerName={note.customer.companyName}
+        customerHref={`/delivery-notes?customerId=${note.customerId}`}
         lead="下記の通り納品致します。"
         infoRows={[
           { label: '案件名', value: note.subject },

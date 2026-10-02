@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { OrderAcceptancePDF } from '@/lib/pdf/simple-doc-template';
 import React from 'react';
+import { pdfContentDisposition } from '@/lib/pdf/filename';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,7 +33,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new NextResponse(buffer as unknown as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${order.orderNumber}.pdf"`,
+        'Content-Disposition': pdfContentDisposition(order.orderDate, order.orderNumber),
       },
     });
   } catch (err: any) {

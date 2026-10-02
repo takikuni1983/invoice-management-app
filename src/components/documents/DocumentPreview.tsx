@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { docFont } from '@/lib/doc-fonts';
 import FitToWidth from '@/components/ui/FitToWidth';
@@ -23,6 +24,8 @@ interface Props {
   dateText: string;
   toLabel: string;
   customerName: string;
+  /** 顧客名のリンク先（その顧客の書類一覧）。画面のみ */
+  customerHref?: string;
   lead?: string;
   infoRows: { label: string; value: string | null | undefined; valueClassName?: string }[];
   totalLabel: string;
@@ -47,7 +50,7 @@ interface Props {
 const num = (n: number) => n.toLocaleString('ja-JP');
 
 export default function DocumentPreview({
-  title, docNumber, dateText, toLabel, customerName, lead, infoRows, totalLabel, itemHeader, showTaxColumn,
+  title, docNumber, dateText, toLabel, customerName, customerHref, lead, infoRows, totalLabel, itemHeader, showTaxColumn,
   lineItems, subtotal, taxAmount, discount, total, sections, companyInfo,
 }: Props) {
   const taxRates = Array.from(new Set(lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
@@ -80,7 +83,9 @@ export default function DocumentPreview({
           {/* 左: 宛先 + 文言 + 案件情報 */}
           <div className="flex-1" style={{ paddingRight: '30pt' }}>
             <p style={{ ...docFont('toLabel'), color: COLOR.title, marginBottom: '3pt' }}>{toLabel}</p>
-            <p className="font-medium" style={{ ...docFont('toCompany'), marginBottom: '18pt' }}>{customerName} 御中</p>
+            <p className="font-medium" style={{ ...docFont('toCompany'), marginBottom: '18pt' }}>{customerHref ? (
+                <Link href={customerHref} className="hover:underline" title="この顧客の書類一覧">{customerName}</Link>
+              ) : customerName} 御中</p>
             {lead && <p style={{ ...docFont('lead'), marginBottom: '12pt' }}>{lead}</p>}
 
             {infoRows.filter(r => r.value).map((r, i) => (

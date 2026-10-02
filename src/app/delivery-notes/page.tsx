@@ -13,10 +13,15 @@ const SORT_KEYS = [...DOCUMENT_SORT_KEYS, 'deliveryDate'] as const;
 export default async function DeliveryNotesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; search?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ status?: string; search?: string; sort?: string; dir?: string; customerId?: string }>;
 }) {
   const { status = '', search = '', ...q } = await searchParams;
   const sort = parseSort(q.sort, q.dir, SORT_KEYS);
+  // 詳細画面の顧客名リンクから来たときは、その顧客の書類だけを表示
+  const customerId = Number(q.customerId) > 0 ? Number(q.customerId) : null;
+  const customer = customerId
+    ? await prisma.customer.findUnique({ where: { id: customerId }, select: { id: true, companyName: true } })
+    : null;
   const orderBy = {
     number: { deliveryNumber: sort.dir },
     customer: { customer: { companyName: sort.dir } },
@@ -29,6 +34,7 @@ export default async function DeliveryNotesPage({
   const notes = await prisma.deliveryNote.findMany({
     where: {
       ...(status ? { status } : {}),
+      ...(customer ? { customerId: customer.id } : {}),
       ...(search
         ? {
             OR: [
@@ -68,6 +74,7 @@ export default async function DeliveryNotesPage({
       status={status}
       search={search}
       sort={sort}
+      customer={customer ? { id: customer.id, name: customer.companyName } : null}
     />
   );
 }
