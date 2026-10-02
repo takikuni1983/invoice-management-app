@@ -41,12 +41,19 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/estimates/${estimate.id}/edit`}
+            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
+          >
+            <Edit className="h-4 w-4" /> 編集
+          </Link>
           <a
             href={`/api/estimates/${estimate.id}/pdf`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
           >
             <Download className="h-4 w-4" /> PDF
           </a>
+          <DuplicateButton basePath="/estimates" id={estimate.id} />
           <Link
             href={`/orders/new?estimateId=${estimate.id}`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
@@ -56,13 +63,6 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           {estimate.status !== 'INVOICED' && (
             <ConvertToInvoiceButton estimateId={estimate.id} />
           )}
-          <DuplicateButton basePath="/estimates" id={estimate.id} />
-          <Link
-            href={`/estimates/${estimate.id}/edit`}
-            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
-          >
-            <Edit className="h-4 w-4" /> 編集
-          </Link>
           <DeleteButton id={estimate.id} type="estimates" redirectTo="/estimates" />
         </div>
       </div>

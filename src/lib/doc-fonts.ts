@@ -22,7 +22,7 @@ export const DOC_FONT = {
   grandValue:    9,    // 総額の金額（小計などの金額とそろえる）
   sectionLabel:  9,    // 備考・取引条件・振込先の見出し（件名の見出しと同じ）
   noteText:      9,    // 備考・取引条件の本文
-  bankText:      10.5, // 振込先の本文（14px）
+  bankText:      9,    // 振込先の本文
 } as const;
 
 export type DocFontKey = keyof typeof DOC_FONT;

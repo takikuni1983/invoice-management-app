@@ -40,6 +40,12 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/delivery-notes/${note.id}/edit`}
+            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
+          >
+            <Edit className="h-4 w-4" /> 編集
+          </Link>
           <a
             href={`/api/delivery-notes/${note.id}/pdf`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
@@ -47,12 +53,6 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
             <Download className="h-4 w-4" /> PDF
           </a>
           <DuplicateButton basePath="/delivery-notes" id={note.id} />
-          <Link
-            href={`/delivery-notes/${note.id}/edit`}
-            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
-          >
-            <Edit className="h-4 w-4" /> 編集
-          </Link>
           <DeleteButton id={note.id} type="delivery-notes" redirectTo="/delivery-notes" />
         </div>
       </div>

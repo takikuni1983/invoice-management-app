@@ -41,12 +41,19 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/invoices/${invoice.id}/edit`}
+            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
+          >
+            <Edit className="h-4 w-4" /> 編集
+          </Link>
           <a
             href={`/api/invoices/${invoice.id}/pdf`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
           >
             <Download className="h-4 w-4" /> PDF
           </a>
+          <DuplicateButton basePath="/invoices" id={invoice.id} />
           <Link
             href={`/delivery-notes/new?invoiceId=${invoice.id}`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
@@ -56,13 +63,6 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           {invoice.status !== 'PAID' && (
             <MarkPaidButton invoiceId={invoice.id} />
           )}
-          <DuplicateButton basePath="/invoices" id={invoice.id} />
-          <Link
-            href={`/invoices/${invoice.id}/edit`}
-            className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"
-          >
-            <Edit className="h-4 w-4" /> 編集
-          </Link>
           <DeleteButton id={invoice.id} type="invoices" redirectTo="/invoices" />
         </div>
       </div>
