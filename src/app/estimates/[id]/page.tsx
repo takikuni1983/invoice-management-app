@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import StatusBadge from '@/components/ui/StatusBadge';
 import DeleteButton from '@/components/ui/DeleteButton';
+import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
 import { format } from 'date-fns';
 import ConvertToInvoiceButton from '@/components/estimates/ConvertToInvoiceButton';
@@ -55,6 +56,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           {estimate.status !== 'INVOICED' && (
             <ConvertToInvoiceButton estimateId={estimate.id} />
           )}
+          <DuplicateButton basePath="/estimates" id={estimate.id} />
           <Link
             href={`/estimates/${estimate.id}/edit`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"

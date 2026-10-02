@@ -21,6 +21,8 @@ interface Props {
 
 export default function InvoiceForm({ invoice, customers, defaultCustomerId, suggestedNumber }: Props) {
   const router = useRouter();
+  // 複製時は id のない invoice が渡される（新規作成として保存する）
+  const isEdit = invoice?.id != null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -61,8 +63,8 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId, sug
     setSaving(true);
     setError('');
     try {
-      const url = invoice ? `/api/invoices/${invoice.id}` : '/api/invoices';
-      const method = invoice ? 'PUT' : 'POST';
+      const url = isEdit ? `/api/invoices/${invoice!.id}` : '/api/invoices';
+      const method = isEdit ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -73,7 +75,7 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId, sug
           discount,
           customFields: customFields.map((cf, i) => ({ ...cf, sortOrder: i })),
           // 編集時に入金日を消さない
-          ...(invoice ? { paidAt: invoice.paidAt ?? null } : {}),
+          ...(isEdit ? { paidAt: invoice!.paidAt ?? null } : {}),
         }),
       });
       if (!res.ok) {
@@ -204,7 +206,7 @@ export default function InvoiceForm({ invoice, customers, defaultCustomerId, sug
           disabled={saving}
           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {saving ? '保存中...' : invoice ? '更新する' : '作成する'}
+          {saving ? '保存中...' : isEdit ? '更新する' : '作成する'}
         </button>
         <button
           type="button"

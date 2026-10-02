@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
 import StatusBadge from '@/components/ui/StatusBadge';
 import DeleteButton from '@/components/ui/DeleteButton';
+import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
 import { Edit, Download } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           >
             <Download className="h-4 w-4" /> PDF
           </a>
+          <DuplicateButton basePath="/orders" id={order.id} />
           <Link
             href={`/orders/${order.id}/edit`}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50"

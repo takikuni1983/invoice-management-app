@@ -21,6 +21,8 @@ interface Props {
 
 export default function EstimateForm({ estimate, customers, defaultCustomerId, suggestedNumber }: Props) {
   const router = useRouter();
+  // 複製時は id のない estimate が渡される（新規作成として保存する）
+  const isEdit = estimate?.id != null;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -63,8 +65,8 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId, s
     setSaving(true);
     setError('');
     try {
-      const url = estimate ? `/api/estimates/${estimate.id}` : '/api/estimates';
-      const method = estimate ? 'PUT' : 'POST';
+      const url = isEdit ? `/api/estimates/${estimate!.id}` : '/api/estimates';
+      const method = isEdit ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -206,7 +208,7 @@ export default function EstimateForm({ estimate, customers, defaultCustomerId, s
           disabled={saving}
           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          {saving ? '保存中...' : estimate ? '更新する' : '作成する'}
+          {saving ? '保存中...' : isEdit ? '更新する' : '作成する'}
         </button>
         <button
           type="button"
