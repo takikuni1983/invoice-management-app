@@ -27,7 +27,7 @@ interface Props {
   /** 顧客名のリンク先（その顧客の書類一覧）。画面のみ */
   customerHref?: string;
   lead?: string;
-  infoRows: { label: string; value: string | null | undefined; valueClassName?: string }[];
+  infoRows: { label: string; value: string | null | undefined }[];
   totalLabel: string;
   itemHeader: string;
   showTaxColumn: boolean;
@@ -92,7 +92,7 @@ export default function DocumentPreview({
               <div key={i} className="flex" style={{ marginBottom: '5pt' }}>
                 <span className="shrink-0" style={{ ...docFont('infoLabel'), width: '56pt', color: COLOR.title }}>{r.label}</span>
                 <span className="shrink-0" style={{ ...docFont('infoLabel'), width: '10pt', color: COLOR.title }}>:</span>
-                <span className={`font-medium ${r.valueClassName ?? ''}`} style={docFont('infoValue')}>{r.value}</span>
+                <span className="font-medium" style={docFont('infoValue')}>{r.value}</span>
               </div>
             ))}
           </div>

@@ -64,19 +64,39 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json({ success: true });
 }
 
-// ステータスだけを変更する（詳細画面のプルダウン）
+// ステータス・入金日だけを変更する（詳細画面のプルダウンと入金日の欄）
+//   { status }          : 入金済みにしたら入金日を記録（未設定なら今日）、入金済み以外に戻したら入金日を消す
+//   { paidAt: 'yyyy-mm-dd' } : 入金日を任意の日付に変更（入金済みの請求書のみ）
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { status } = await req.json();
-  if (typeof status !== 'string' || !(status in INVOICE_STATUS_LABELS)) {
+  const body = await req.json();
+  const { status, paidAt } = body ?? {};
+
+  if (status !== undefined && (typeof status !== 'string' || !(status in INVOICE_STATUS_LABELS))) {
     return NextResponse.json({ error: 'ステータスが正しくありません' }, { status: 400 });
   }
+  let paidDate: Date | undefined;
+  if (paidAt !== undefined) {
+    paidDate = typeof paidAt === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(paidAt) ? new Date(paidAt) : undefined;
+    if (!paidDate || isNaN(paidDate.getTime())) {
+      return NextResponse.json({ error: '入金日の形式が正しくありません' }, { status: 400 });
+    }
+  }
+  if (status === undefined && paidDate === undefined) {
+    return NextResponse.json({ error: '変更する項目がありません' }, { status: 400 });
+  }
+
   try {
-  // 入金済みにしたら入金日を記録（未設定のときは今日）、入金済み以外に戻したら入金日を消す
-  const current = await prisma.invoice.findUnique({ where: { id: Number(id) }, select: { paidAt: true } });
-  if (!current) return NextResponse.json({ error: '見つかりません' }, { status: 404 });
-  const paidAt = status === 'PAID' ? (current.paidAt ?? new Date()) : null;
-  await prisma.invoice.update({ where: { id: Number(id) }, data: { status, paidAt } });
+    const current = await prisma.invoice.findUnique({ where: { id: Number(id) }, select: { status: true, paidAt: true } });
+    if (!current) return NextResponse.json({ error: '請求書が見つかりません' }, { status: 404 });
+
+    const nextStatus = status ?? current.status;
+    if (paidDate && nextStatus !== 'PAID') {
+      return NextResponse.json({ error: '入金日は入金済みの請求書にだけ設定できます' }, { status: 400 });
+    }
+    const nextPaidAt = nextStatus === 'PAID' ? (paidDate ?? current.paidAt ?? new Date()) : null;
+
+    await prisma.invoice.update({ where: { id: Number(id) }, data: { status: nextStatus, paidAt: nextPaidAt } });
     return NextResponse.json({ success: true });
   } catch (err) {
     return apiErrorResponse(err);

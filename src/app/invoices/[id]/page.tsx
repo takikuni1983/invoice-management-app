@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import StatusSelect from '@/components/ui/StatusSelect';
+import PaidDateBar from '@/components/invoices/PaidDateBar';
 import DeleteButton from '@/components/ui/DeleteButton';
 import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
@@ -67,6 +68,11 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
+      {/* 入金日: 書類の枠外に表示・変更できる */}
+      {invoice.status === 'PAID' && (
+        <PaidDateBar invoiceId={invoice.id} paidAt={format(invoice.paidAt ?? new Date(), 'yyyy-MM-dd')} />
+      )}
+
       <DocumentPreview
         title="請求書"
         docNumber={invoice.invoiceNumber}
@@ -77,8 +83,6 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         infoRows={[
           { label: '件名', value: invoice.subject },
           { label: '支払期限', value: invoice.dueDate ? format(invoice.dueDate, 'yyyy/MM/dd') : null },
-          // 入金日は画面だけに表示（PDF には出さない）
-          { label: '入金日', value: invoice.paidAt ? format(invoice.paidAt, 'yyyy/MM/dd') : null, valueClassName: 'text-green-600' },
           ...invoice.customFields.map(f => ({ label: f.label, value: f.value })),
         ]}
         totalLabel="総額"
