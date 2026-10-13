@@ -16,7 +16,8 @@ export default async function DeliveryNotesPage({
   searchParams: Promise<{ status?: string; search?: string; sort?: string; dir?: string; customerId?: string }>;
 }) {
   const { status = '', search = '', ...q } = await searchParams;
-  const sort = parseSort(q.sort, q.dir, SORT_KEYS);
+  // 初期の並び順: 日付の新しい順（同じ日は番号の大きい順）
+  const sort = parseSort(q.sort, q.dir, SORT_KEYS, { key: 'deliveryDate', dir: 'desc' });
   // 詳細画面の顧客名リンクから来たときは、その顧客の書類だけを表示
   const customerId = Number(q.customerId) > 0 ? Number(q.customerId) : null;
   const customer = customerId
@@ -29,7 +30,7 @@ export default async function DeliveryNotesPage({
     status: { status: sort.dir },
     total: { totalAmount: sort.dir },
     deliveryDate: { deliveryDate: sort.dir },
-  }[sort.key ?? ''] ?? { createdAt: 'desc' as const };
+  }[sort.key ?? ''] ?? { deliveryDate: 'desc' as const };
 
   const notes = await prisma.deliveryNote.findMany({
     where: {
@@ -46,7 +47,7 @@ export default async function DeliveryNotesPage({
         : {}),
     },
     include: { customer: true, invoice: { select: { id: true, invoiceNumber: true } } },
-    orderBy: [orderBy, { id: 'desc' }],
+    orderBy: [orderBy, { deliveryNumber: 'desc' }, { id: 'desc' }],
   });
 
   return (

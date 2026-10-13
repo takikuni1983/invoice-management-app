@@ -10,7 +10,8 @@ export default async function InvoiceDetailLayout({ children }: { children: Reac
       id: true, invoiceNumber: true, subject: true, status: true, totalAmount: true, issueDate: true,
       customer: { select: { companyName: true } },
     },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    // 一覧画面の初期の並び順と同じ（日付の新しい順 → 番号の大きい順）
+    orderBy: [{ issueDate: 'desc' }, { invoiceNumber: 'desc' }, { id: 'desc' }],
   });
 
   return (

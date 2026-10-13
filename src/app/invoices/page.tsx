@@ -18,7 +18,8 @@ export default async function InvoicesPage({
   searchParams: Promise<{ status?: string; search?: string; sort?: string; dir?: string; customerId?: string }>;
 }) {
   const { status = '', search = '', ...q } = await searchParams;
-  const sort = parseSort(q.sort, q.dir, SORT_KEYS);
+  // 初期の並び順: 日付の新しい順（同じ日は番号の大きい順）
+  const sort = parseSort(q.sort, q.dir, SORT_KEYS, { key: 'issueDate', dir: 'desc' });
   // 詳細画面の顧客名リンクから来たときは、その顧客の書類だけを表示
   const customerId = Number(q.customerId) > 0 ? Number(q.customerId) : null;
   const customer = customerId
@@ -32,7 +33,7 @@ export default async function InvoicesPage({
     total: { totalAmount: sort.dir },
     issueDate: { issueDate: sort.dir },
     dueDate: { dueDate: sort.dir },
-  }[sort.key ?? ''] ?? { createdAt: 'desc' as const };
+  }[sort.key ?? ''] ?? { issueDate: 'desc' as const };
 
   // 支払期限を過ぎた送付済みの請求書を「期限超過」にする
   await prisma.invoice.updateMany({
@@ -55,7 +56,7 @@ export default async function InvoicesPage({
         : {}),
     },
     include: { customer: true },
-    orderBy: [orderBy, { id: 'desc' }],
+    orderBy: [orderBy, { invoiceNumber: 'desc' }, { id: 'desc' }],
   });
 
   return (

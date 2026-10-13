@@ -7,8 +7,12 @@ export interface SortState {
   dir: SortDir;
 }
 
-export function parseSort(sort: string | undefined, dir: string | undefined, allowed: readonly string[]): SortState {
+/** 指定がない（または不正な）ときは defaultSort を使う */
+export function parseSort(
+  sort: string | undefined, dir: string | undefined, allowed: readonly string[], defaultSort?: SortState,
+): SortState {
   const key = sort && allowed.includes(sort) ? sort : null;
+  if (!key && defaultSort) return defaultSort;
   return { key, dir: dir === 'asc' ? 'asc' : 'desc' };
 }
 

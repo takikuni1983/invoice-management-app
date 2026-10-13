@@ -18,7 +18,8 @@ export default async function EstimatesPage({
   searchParams: Promise<{ status?: string; search?: string; sort?: string; dir?: string; customerId?: string }>;
 }) {
   const { status = '', search = '', ...q } = await searchParams;
-  const sort = parseSort(q.sort, q.dir, SORT_KEYS);
+  // 初期の並び順: 日付の新しい順（同じ日は番号の大きい順）
+  const sort = parseSort(q.sort, q.dir, SORT_KEYS, { key: 'issueDate', dir: 'desc' });
   // 詳細画面の顧客名リンクから来たときは、その顧客の書類だけを表示
   const customerId = Number(q.customerId) > 0 ? Number(q.customerId) : null;
   const customer = customerId
@@ -31,7 +32,7 @@ export default async function EstimatesPage({
     status: { status: sort.dir },
     total: { totalAmount: sort.dir },
     issueDate: { issueDate: sort.dir },
-  }[sort.key ?? ''] ?? { createdAt: 'desc' as const };
+  }[sort.key ?? ''] ?? { issueDate: 'desc' as const };
 
   const estimates = await prisma.estimate.findMany({
     where: {
@@ -48,7 +49,7 @@ export default async function EstimatesPage({
         : {}),
     },
     include: { customer: true },
-    orderBy: [orderBy, { id: 'desc' }],
+    orderBy: [orderBy, { estimateNumber: 'desc' }, { id: 'desc' }],
   });
 
   return (

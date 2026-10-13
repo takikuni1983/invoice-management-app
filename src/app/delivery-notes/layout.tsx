@@ -10,7 +10,8 @@ export default async function DeliveryNoteDetailLayout({ children }: { children:
       id: true, deliveryNumber: true, subject: true, status: true, totalAmount: true, deliveryDate: true,
       customer: { select: { companyName: true } },
     },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    // 一覧画面の初期の並び順と同じ（日付の新しい順 → 番号の大きい順）
+    orderBy: [{ deliveryDate: 'desc' }, { deliveryNumber: 'desc' }, { id: 'desc' }],
   });
 
   return (
