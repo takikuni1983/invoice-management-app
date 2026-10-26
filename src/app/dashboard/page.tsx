@@ -7,7 +7,32 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import { TrendingUp, TrendingDown, AlertCircle, Clock, FileText } from 'lucide-react';
 
-export default async function DashboardPage() {
+// 月次売上グラフの期間（初期値: 今年）
+const RANGES = [
+  { value: '6m', label: '6カ月' },
+  { value: '12m', label: '12カ月' },
+  { value: 'thisYear', label: '今年' },
+  { value: 'lastYear', label: '昨年' },
+] as const;
+type Range = (typeof RANGES)[number]['value'];
+
+/** グラフに並べる月（古い順） */
+function rangeMonths(range: Range, now: Date): Date[] {
+  if (range === '6m' || range === '12m') {
+    const n = range === '6m' ? 6 : 12;
+    return Array.from({ length: n }, (_, i) => startOfMonth(subMonths(now, n - 1 - i)));
+  }
+  const year = now.getFullYear() - (range === 'lastYear' ? 1 : 0);
+  return Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) {
+  const { range: rangeParam } = await searchParams;
+  const range: Range = RANGES.some(r => r.value === rangeParam) ? (rangeParam as Range) : 'thisYear';
   const now = new Date();
   const startThis = startOfMonth(now);
   const endThis = endOfMonth(now);
@@ -47,19 +72,28 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  // Monthly revenue for last 6 months
-  const monthlyRevenue = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = subMonths(now, i);
-    const agg = await prisma.invoice.aggregate({
-      where: { status: 'PAID', paidAt: { gte: startOfMonth(d), lte: endOfMonth(d) } },
-      _sum: { totalAmount: true },
-    });
-    monthlyRevenue.push({
-      month: format(d, 'M月', { locale: ja }),
-      amount: agg._sum.totalAmount ?? 0,
-    });
+  // 月次売上（入金済みの請求書を入金日で集計）: 期間内をまとめて取得して月ごとに合計
+  const months = rangeMonths(range, now);
+  const paidInRange = await prisma.invoice.findMany({
+    where: { status: 'PAID', paidAt: { gte: months[0], lte: endOfMonth(months[months.length - 1]) } },
+    select: { paidAt: true, totalAmount: true },
+  });
+  const byMonth = new Map<string, number>();
+  for (const inv of paidInRange) {
+    const key = format(inv.paidAt!, 'yyyy-MM');
+    byMonth.set(key, (byMonth.get(key) ?? 0) + inv.totalAmount);
   }
+  const rolling = range === '6m' || range === '12m';
+  const monthlyRevenue = months.map((d, i) => ({
+    // 年をまたぐ期間は先頭の月と1月に年を付ける
+    month: rolling && (i === 0 || d.getMonth() === 0) ? format(d, 'yy年M月', { locale: ja }) : format(d, 'M月', { locale: ja }),
+    amount: byMonth.get(format(d, 'yyyy-MM')) ?? 0,
+  }));
+  const rangeTotal = monthlyRevenue.reduce((sum, m) => sum + m.amount, 0);
+  const rangeTitle =
+    range === 'thisYear' ? `${now.getFullYear()}年`
+    : range === 'lastYear' ? `${now.getFullYear() - 1}年`
+    : `過去${range === '6m' ? 6 : 12}カ月`;
 
   const thisMonthRevenue = thisMonth._sum.totalAmount ?? 0;
   const prevMonthRevenue = prevMonth._sum.totalAmount ?? 0;
@@ -109,7 +143,28 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* 月次売上グラフ */}
         <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-5">
-          <h3 className="font-medium text-gray-900 mb-4">月次売上 (過去6ヶ月)</h3>
+          <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
+            <div>
+              <h3 className="font-medium text-gray-900">月次売上（{rangeTitle}）</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                合計 <span className="font-medium text-gray-900">{formatCurrency(rangeTotal)}</span>（入金済みの請求書・入金日で集計）
+              </p>
+            </div>
+            <div className="inline-flex rounded-md border border-gray-300 bg-white p-0.5">
+              {RANGES.map((r) => (
+                <Link
+                  key={r.value}
+                  href={`/dashboard?range=${r.value}`}
+                  scroll={false}
+                  className={`px-2.5 py-1 text-xs font-medium rounded whitespace-nowrap ${
+                    range === r.value ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {r.label}
+                </Link>
+              ))}
+            </div>
+          </div>
           <RevenueChart data={monthlyRevenue} />
         </div>
 
