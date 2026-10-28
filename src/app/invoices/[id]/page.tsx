@@ -6,6 +6,8 @@ import PaidDateBar from '@/components/invoices/PaidDateBar';
 import DeleteButton from '@/components/ui/DeleteButton';
 import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
+import RevisionHistory from '@/components/documents/RevisionHistory';
+import { getRevisions } from '@/lib/revisions';
 import { format } from 'date-fns';
 import MarkPaidButton from '@/components/invoices/MarkPaidButton';
 import { Edit, Download, Truck } from 'lucide-react';
@@ -13,7 +15,7 @@ import { Edit, Download, Truck } from 'lucide-react';
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [invoice, companyInfo] = await Promise.all([
+  const [invoice, companyInfo, revisions] = await Promise.all([
     prisma.invoice.findUnique({
       where: { id: Number(id) },
       include: {
@@ -24,6 +26,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       },
     }),
     prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
+    getRevisions(prisma, 'invoice', Number(id)),
   ]);
 
   if (!invoice) notFound();
@@ -101,6 +104,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         ]}
         companyInfo={companyInfo}
       />
+
+      <RevisionHistory revisions={revisions} />
     </div>
   );
 }

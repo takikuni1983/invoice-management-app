@@ -4,6 +4,7 @@ import { INVOICE_STATUS_LABELS } from '@/lib/utils';
 import { resolveNumberForUpdate } from '@/lib/numbering';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
+import { toSnapshot, recordRevision, deleteRevisions } from '@/lib/revisions';
 
 const include = {
   customer: true,
@@ -25,6 +26,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const result = await prisma.$transaction(async (tx) => {
     const invoiceNumber = await resolveNumberForUpdate(tx, 'invoice', body.invoiceNumber, Number(id));
+    // 変更前の金額・明細（変更履歴用）
+    const current = await tx.invoice.findUnique({
+      where: { id: Number(id) },
+      include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
+    });
     await tx.invoiceLineItem.deleteMany({ where: { invoiceId: Number(id) } });
     await tx.invoiceCustomField.deleteMany({ where: { invoiceId: Number(id) } });
 
@@ -32,6 +38,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const items = buildLineItems(lineItems, rate);
     const totals = calcTotals(items, discount);
     const fields = buildCustomFields(customFields);
+
+    if (current) {
+      await recordRevision(tx, 'invoice', Number(id), toSnapshot(current), toSnapshot({ ...totals, lineItems: items }));
+    }
 
     return tx.invoice.update({
       where: { id: Number(id) },
@@ -60,7 +70,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.invoice.delete({ where: { id: Number(id) } });
+  await prisma.$transaction(async (tx) => {
+    await deleteRevisions(tx, 'invoice', Number(id));
+    await tx.invoice.delete({ where: { id: Number(id) } });
+  });
   return NextResponse.json({ success: true });
 }
 

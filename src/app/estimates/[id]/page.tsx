@@ -5,6 +5,8 @@ import StatusSelect from '@/components/ui/StatusSelect';
 import DeleteButton from '@/components/ui/DeleteButton';
 import DuplicateButton from '@/components/ui/DuplicateButton';
 import DocumentPreview from '@/components/documents/DocumentPreview';
+import RevisionHistory from '@/components/documents/RevisionHistory';
+import { getRevisions } from '@/lib/revisions';
 import { format } from 'date-fns';
 import ConvertToInvoiceButton from '@/components/estimates/ConvertToInvoiceButton';
 import { Edit, Download, ClipboardCheck } from 'lucide-react';
@@ -12,7 +14,7 @@ import { Edit, Download, ClipboardCheck } from 'lucide-react';
 export default async function EstimateDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [estimate, companyInfo] = await Promise.all([
+  const [estimate, companyInfo, revisions] = await Promise.all([
     prisma.estimate.findUnique({
       where: { id: Number(id) },
       include: {
@@ -23,6 +25,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
       },
     }),
     prisma.companyInfo.findUnique({ where: { id: 1 } }).catch(() => null),
+    getRevisions(prisma, 'estimate', Number(id)),
   ]);
 
   if (!estimate) notFound();
@@ -93,6 +96,8 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         ]}
         companyInfo={companyInfo}
       />
+
+      <RevisionHistory revisions={revisions} />
     </div>
   );
 }

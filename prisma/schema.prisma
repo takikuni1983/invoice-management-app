@@ -257,3 +257,16 @@ model NumberSetting {
   digits     Int      @default(4)
   updatedAt  DateTime @updatedAt
 }
+
+// 見積書・請求書の金額の変更履歴（書類ごとに最新5件まで）
+// before / after は保存前後のスナップショット（明細・小計・消費税・値引き・総額）の JSON
+model DocumentRevision {
+  id        Int      @id @default(autoincrement())
+  docType   String   // estimate / invoice
+  docId     Int
+  before    String
+  after     String
+  createdAt DateTime @default(now())
+
+  @@index([docType, docId])
+}

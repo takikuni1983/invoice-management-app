@@ -4,6 +4,7 @@ import { ESTIMATE_STATUS_LABELS } from '@/lib/utils';
 import { resolveNumberForUpdate } from '@/lib/numbering';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
+import { toSnapshot, recordRevision, deleteRevisions } from '@/lib/revisions';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,6 +27,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const result = await prisma.$transaction(async (tx) => {
     const estimateNumber = await resolveNumberForUpdate(tx, 'estimate', body.estimateNumber, Number(id));
+    // 変更前の金額・明細（変更履歴用）
+    const current = await tx.estimate.findUnique({
+      where: { id: Number(id) },
+      include: { lineItems: { orderBy: { sortOrder: 'asc' } } },
+    });
     await tx.estimateLineItem.deleteMany({ where: { estimateId: Number(id) } });
     await tx.estimateCustomField.deleteMany({ where: { estimateId: Number(id) } });
 
@@ -33,6 +39,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const items = buildLineItems(lineItems, rate);
     const totals = calcTotals(items, discount);
     const fields = buildCustomFields(customFields);
+
+    if (current) {
+      await recordRevision(tx, 'estimate', Number(id), toSnapshot(current), toSnapshot({ ...totals, lineItems: items }));
+    }
 
     return tx.estimate.update({
       where: { id: Number(id) },
@@ -65,7 +75,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.estimate.delete({ where: { id: Number(id) } });
+  await prisma.$transaction(async (tx) => {
+    await deleteRevisions(tx, 'estimate', Number(id));
+    await tx.estimate.delete({ where: { id: Number(id) } });
+  });
   return NextResponse.json({ success: true });
 }
 
