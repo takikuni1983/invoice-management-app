@@ -148,7 +148,8 @@ export default function DocumentPreview({
         </div>
 
         {/* 明細テーブル */}
-        <table className="w-full border-collapse">
+        {/* 行の区切り線をセル側に持たせる（border-collapse だと並べ替えのドラッグ中に線が行と一緒に動かない） */}
+        <table className="w-full border-separate" style={{ borderSpacing: 0 }}>
           <thead>
             <tr style={{ backgroundColor: COLOR.tableHead }}>
               <th className="text-left font-medium text-white" style={{ ...docFont('tableHead'), ...headPad }}>{itemHeader}</th>
