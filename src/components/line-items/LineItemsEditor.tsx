@@ -1,6 +1,8 @@
 'use client';
 
-import { Plus, Trash2 } from 'lucide-react';
+import { useRef } from 'react';
+import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { useRowDrag, moveItem } from '@/components/ui/useRowDrag';
 import { formatCurrency, TAX_RATES } from '@/lib/utils';
 
 export const DEFAULT_TAX_RATE = 10;
@@ -22,8 +24,17 @@ interface Props {
 }
 
 const DATALIST_ID = 'item-master-list';
+const rowBorder = { borderBottom: '1px solid #e3e3e3' };
 
 export default function LineItemsEditor({ items, onChange, masterItems = [] }: Props) {
+  // 行の key（並べ替えても入力中の行がずれないように、行と一緒に動かす）
+  const keysRef = useRef<number[]>([]);
+  const nextKey = useRef(0);
+  if (keysRef.current.length !== items.length) {
+    keysRef.current = items.map((_, i) => keysRef.current[i] ?? nextKey.current++);
+  }
+  const keys = keysRef.current;
+
   function updateItem(index: number, field: keyof LineItemRow, value: string | number) {
     const updated = items.map((item, i) => {
       if (i !== index) return item;
@@ -41,8 +52,46 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
   }
 
   function removeItem(index: number) {
+    keysRef.current = keys.filter((_, i) => i !== index);
     onChange(items.filter((_, i) => i !== index));
   }
+
+  function moveRow(from: number, to: number) {
+    keysRef.current = moveItem(keys, from, to);
+    onChange(moveItem(items, from, to));
+  }
+
+  // スマホのカードと PC の表はそれぞれ別の要素なので、ドラッグの状態も別に持つ
+  const cardDrag = useRowDrag(items.length, moveRow);
+  const tableDrag = useRowDrag(items.length, moveRow);
+  const canSort = items.length > 1;
+
+  // つまみ: ドラッグ、または選んで ↑↓ キーで移動
+  function grip(index: number, drag: ReturnType<typeof useRowDrag>, className: string) {
+    if (!canSort) return null;
+    const active = drag.activeIndex === index;
+    return (
+      <button
+        type="button"
+        title="ドラッグで並べ替え"
+        aria-label={`${items[index].description || `${index + 1}行目`} を並べ替え（↑↓キーでも移動）`}
+        onPointerDown={(e) => drag.startDrag(e, index)}
+        onKeyDown={(e) => {
+          if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+          e.preventDefault();
+          const to = e.key === 'ArrowUp' ? index - 1 : index + 1;
+          if (to >= 0 && to < items.length) moveRow(index, to);
+        }}
+        className={`flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${className}`}
+        style={{ touchAction: 'none', cursor: active ? 'grabbing' : 'grab', color: active ? '#2563eb' : undefined }}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+    );
+  }
+
+  // つかんでいる行の見た目（影と青い枠）
+  const activeStyle = { backgroundColor: '#ffffff', boxShadow: '0 0 0 1px #93c5fd, 0 10px 24px rgba(15, 23, 42, 0.18)' };
 
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
   const taxAmount = items.reduce((sum, item) => sum + Math.round(item.amount * item.taxRate / 100), 0);
@@ -62,8 +111,14 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
       {/* スマホ: 1行ずつカードで入力 */}
       <div className="md:hidden space-y-3">
         {items.map((item, i) => (
-          <div key={i} className="border rounded-md p-3 space-y-2" style={{ borderColor: '#e3e3e3' }}>
+          <div
+            key={keys[i]}
+            ref={cardDrag.setRowRef(i)}
+            className="border rounded-md p-3 space-y-2 bg-white"
+            style={{ borderColor: '#e3e3e3', ...cardDrag.rowStyle(i), ...(cardDrag.activeIndex === i ? activeStyle : {}) }}
+          >
             <div className="flex items-start gap-2">
+              {grip(i, cardDrag, 'shrink-0 -ml-1 h-9 w-7')}
               <input
                 list={masterItems.length > 0 ? DATALIST_ID : undefined}
                 value={item.description}
@@ -137,10 +192,13 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
       </div>
 
       {/* PC: 表形式 */}
-      <div className="hidden md:block border rounded-md overflow-hidden" style={{ borderColor: '#e3e3e3' }}>
-        <table className="w-full text-sm">
+      {/* 角丸のため overflow-hidden。ドラッグ中だけは、表の外まで動かした行が切れないように外す */}
+      <div className={`hidden md:block border rounded-md ${tableDrag.isDragging ? 'overflow-visible' : 'overflow-hidden'}`} style={{ borderColor: '#e3e3e3' }}>
+        {/* 行の区切り線はセル側に持たせる（border-collapse だとドラッグ中に線が行と一緒に動かない） */}
+        <table className="w-full text-sm border-separate" style={{ borderSpacing: 0 }}>
           <thead>
             <tr style={{ backgroundColor: '#3c3d3a' }}>
+              {canSort && <th className="w-7" aria-label="並べ替え"></th>}
               <th className="text-left px-3 py-2 font-bold text-white text-sm">品目・内容</th>
               <th className="text-right px-3 py-2 font-bold text-white text-sm w-20">数量</th>
               <th className="text-right px-3 py-2 font-bold text-white text-sm w-28">単価</th>
@@ -152,11 +210,17 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
           <tbody>
             {items.map((item, i) => (
               <tr
-                key={i}
-                className="border-b align-top"
-                style={{ borderColor: '#e3e3e3', backgroundColor: i % 2 === 1 ? '#F9FAFB' : '#FFFFFF' }}
+                key={keys[i]}
+                ref={tableDrag.setRowRef(i)}
+                className="align-top"
+                style={{
+                  backgroundColor: i % 2 === 1 ? '#F9FAFB' : '#FFFFFF',
+                  ...tableDrag.rowStyle(i),
+                  ...(tableDrag.activeIndex === i ? activeStyle : {}),
+                }}
               >
-                <td className="px-2 py-2">
+                {canSort && <td className="pl-1 py-2" style={rowBorder}>{grip(i, tableDrag, 'h-7 w-6')}</td>}
+                <td className="px-2 py-2" style={rowBorder}>
                   <input
                     list={masterItems.length > 0 ? DATALIST_ID : undefined}
                     value={item.description}
@@ -173,7 +237,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     style={{ color: '#727272' }}
                   />
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-2" style={rowBorder}>
                   <input
                     type="number"
                     min="0"
@@ -183,7 +247,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-sm"
                   />
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-2" style={rowBorder}>
                   <input
                     type="number"
                     min="0"
@@ -192,7 +256,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     className="w-full text-right border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-sm"
                   />
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-2" style={rowBorder}>
                   <select
                     value={item.taxRate}
                     onChange={(e) => updateItem(i, 'taxRate', Number(e.target.value))}
@@ -204,10 +268,10 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
                     ))}
                   </select>
                 </td>
-                <td className="px-3 py-2 text-right text-sm">
+                <td className="px-3 py-2 text-right text-sm" style={rowBorder}>
                   {formatCurrency(item.amount)}
                 </td>
-                <td className="px-1 py-2">
+                <td className="px-1 py-2" style={rowBorder}>
                   <button
                     type="button"
                     onClick={() => removeItem(i)}
@@ -220,7 +284,7 @@ export default function LineItemsEditor({ items, onChange, masterItems = [] }: P
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-gray-400 text-sm">
+                <td colSpan={canSort ? 7 : 6} className="text-center py-6 text-gray-400 text-sm">
                   明細行がありません。「行を追加」をクリックしてください。
                 </td>
               </tr>
