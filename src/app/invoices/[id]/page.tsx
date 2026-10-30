@@ -92,6 +92,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         itemHeader="項目 & 詳細"
         showTaxColumn
         lineItems={invoice.lineItems}
+        reorder={{ docType: 'invoices', docId: invoice.id }}
         subtotal={invoice.subtotal}
         taxAmount={invoice.taxAmount}
         discount={invoice.discount ?? 0}

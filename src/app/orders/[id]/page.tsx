@@ -76,6 +76,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         itemHeader="納品物 & 詳細"
         showTaxColumn={false}
         lineItems={order.lineItems}
+        reorder={{ docType: 'orders', docId: order.id }}
         subtotal={order.subtotal}
         taxAmount={order.taxAmount}
         discount={order.discount ?? 0}

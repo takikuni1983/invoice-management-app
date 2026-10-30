@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { docFont } from '@/lib/doc-fonts';
 import FitToWidth from '@/components/ui/FitToWidth';
+import SortableLineItems, { type PreviewLineItem, type ReorderDocType } from '@/components/documents/SortableLineItems';
 
 // 見積書・請求書・発注請書・納品書の画面プレビュー。
 // PDF テンプレート（src/lib/pdf/*）と同じ寸法（pt）で組み、A4 の幅（595pt ≒ 794px）を画面幅に合わせて縮小表示する。
@@ -31,10 +32,9 @@ interface Props {
   totalLabel: string;
   itemHeader: string;
   showTaxColumn: boolean;
-  lineItems: {
-    id: number; description: string; details: string | null;
-    quantity: number; unitPrice: number; amount: number; taxRate: number;
-  }[];
+  lineItems: PreviewLineItem[];
+  /** 指定すると明細をドラッグで並べ替えできる（画面のみ） */
+  reorder?: { docType: ReorderDocType; docId: number };
   subtotal: number;
   taxAmount: number;
   discount: number;
@@ -51,11 +51,10 @@ const num = (n: number) => n.toLocaleString('ja-JP');
 
 export default function DocumentPreview({
   title, docNumber, dateText, toLabel, customerName, customerHref, lead, infoRows, totalLabel, itemHeader, showTaxColumn,
-  lineItems, subtotal, taxAmount, discount, total, sections, companyInfo,
+  lineItems, reorder, subtotal, taxAmount, discount, total, sections, companyInfo,
 }: Props) {
   const taxRates = Array.from(new Set(lineItems.map(i => i.taxRate ?? 10))).filter(r => r > 0);
   const taxLabel = taxRates.length === 1 ? `消費税 (${taxRates[0]}%)` : '消費税';
-  const cellPad = { padding: '9pt 6pt' };
   const headPad = { padding: '6pt 6pt' };
 
   return (
@@ -161,28 +160,7 @@ export default function DocumentPreview({
               <th className="text-right font-medium text-white" style={{ ...docFont('tableHead'), ...headPad, width: showTaxColumn ? '68pt' : '80pt' }}>総額</th>
             </tr>
           </thead>
-          <tbody>
-            {lineItems.map((item) => (
-              <tr key={item.id} style={{ borderBottom: `0.5pt solid ${COLOR.border}` }}>
-                <td className="align-top" style={cellPad}>
-                  <div className="font-medium" style={{ ...docFont('itemName'), marginBottom: '3pt' }}>{item.description}</div>
-                  {item.details && (
-                    <div className="whitespace-pre-line" style={{ ...docFont('itemDetail'), color: COLOR.gray }}>{item.details}</div>
-                  )}
-                </td>
-                <td className="align-top text-right" style={{ ...docFont('cell'), ...cellPad }}>
-                  {item.quantity.toLocaleString('ja-JP', { maximumFractionDigits: 2 })}
-                </td>
-                <td className="align-top text-right" style={{ ...docFont('cell'), ...cellPad }}>{num(item.unitPrice)}</td>
-                {showTaxColumn && (
-                  <td className="align-top text-right" style={{ ...docFont('cell'), ...cellPad, color: COLOR.gray }}>
-                    {(item.taxRate ?? 10) === 0 ? '-' : `${item.taxRate ?? 10}`}
-                  </td>
-                )}
-                <td className="align-top text-right" style={{ ...docFont('cell'), ...cellPad }}>{num(item.amount)}</td>
-              </tr>
-            ))}
-          </tbody>
+          <SortableLineItems lineItems={lineItems} showTaxColumn={showTaxColumn} reorder={reorder} border={COLOR.border} gray={COLOR.gray} />
         </table>
 
         {/* 集計 */}

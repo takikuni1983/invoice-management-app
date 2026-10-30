@@ -86,6 +86,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
         itemHeader="項目 & 詳細"
         showTaxColumn
         lineItems={estimate.lineItems}
+        reorder={{ docType: 'estimates', docId: estimate.id }}
         subtotal={estimate.subtotal}
         taxAmount={estimate.taxAmount}
         discount={estimate.discount ?? 0}

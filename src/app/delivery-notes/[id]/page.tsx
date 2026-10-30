@@ -75,6 +75,7 @@ export default async function DeliveryNoteDetailPage({ params }: { params: Promi
         itemHeader="納品物 & 詳細"
         showTaxColumn={false}
         lineItems={note.lineItems}
+        reorder={{ docType: 'delivery-notes', docId: note.id }}
         subtotal={note.subtotal}
         taxAmount={note.taxAmount}
         discount={note.discount ?? 0}
