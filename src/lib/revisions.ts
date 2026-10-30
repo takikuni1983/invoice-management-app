@@ -18,6 +18,11 @@ function ignoreMissingTable<T>(fallback: T) {
 export type RevisionDocType = 'estimate' | 'invoice';
 type Db = PrismaClient | Prisma.TransactionClient;
 
+// Prisma Client が作り直される前（prisma generate 前）は documentRevision 自体がないので、履歴だけ飛ばす
+function table(db: Db): Db['documentRevision'] | null {
+  return (db as Partial<Pick<Db, 'documentRevision'>>).documentRevision ?? null;
+}
+
 export interface SnapshotItem {
   description: string;
   details: string | null;
@@ -67,22 +72,25 @@ export function amountChanged(a: Snapshot, b: Snapshot): boolean {
 
 /** 金額が変わっていれば履歴を1件追加し、古い履歴を MAX_REVISIONS 件まで削る */
 export async function recordRevision(db: Db, docType: RevisionDocType, docId: number, before: Snapshot, after: Snapshot) {
-  if (!amountChanged(before, after)) return;
-  const created = await db.documentRevision.create({
+  const t = table(db);
+  if (!t || !amountChanged(before, after)) return;
+  const created = await t.create({
     data: { docType, docId, before: JSON.stringify(before), after: JSON.stringify(after) },
   }).catch(ignoreMissingTable(null));
   if (!created) return;
-  const old = await db.documentRevision.findMany({
+  const old = await t.findMany({
     where: { docType, docId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     skip: MAX_REVISIONS,
     select: { id: true },
   });
-  if (old.length) await db.documentRevision.deleteMany({ where: { id: { in: old.map(o => o.id) } } });
+  if (old.length) await t.deleteMany({ where: { id: { in: old.map(o => o.id) } } });
 }
 
 export async function getRevisions(db: Db, docType: RevisionDocType, docId: number) {
-  const rows = await db.documentRevision.findMany({
+  const t = table(db);
+  if (!t) return [];
+  const rows = await t.findMany({
     where: { docType, docId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: MAX_REVISIONS,
@@ -96,5 +104,5 @@ export async function getRevisions(db: Db, docType: RevisionDocType, docId: numb
 }
 
 export async function deleteRevisions(db: Db, docType: RevisionDocType, docId: number) {
-  await db.documentRevision.deleteMany({ where: { docType, docId } }).catch(ignoreMissingTable(null));
+  await table(db)?.deleteMany({ where: { docType, docId } }).catch(ignoreMissingTable(null));
 }
