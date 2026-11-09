@@ -63,9 +63,7 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           >
             <ClipboardCheck className="h-4 w-4" /> 発注請書を作成
           </Link>
-          {estimate.status !== 'INVOICED' && (
-            <ConvertToInvoiceButton estimateId={estimate.id} />
-          )}
+          <ConvertToInvoiceButton estimateId={estimate.id} invoiced={estimate.status === 'INVOICED'} />
           <DeleteButton id={estimate.id} type="estimates" redirectTo="/estimates" />
         </div>
       </div>

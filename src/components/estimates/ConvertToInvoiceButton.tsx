@@ -4,12 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText } from 'lucide-react';
 
-export default function ConvertToInvoiceButton({ estimateId }: { estimateId: number }) {
+// 請求済みの見積書からも、もう1枚請求書を作れる（分割請求など）。そのときは確認文で知らせる
+export default function ConvertToInvoiceButton({ estimateId, invoiced = false }: { estimateId: number; invoiced?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleConvert() {
-    if (!confirm('この見積書を請求書に変換しますか？見積書のステータスが「請求済み」になります。')) return;
+    const message = invoiced
+      ? 'この見積書からは既に請求書を作成しています。もう1枚請求書を作成しますか？'
+      : 'この見積書を請求書に変換しますか？見積書のステータスが「請求済み」になります。';
+    if (!confirm(message)) return;
     setLoading(true);
     try {
       // Fetch estimate data first
