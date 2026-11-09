@@ -148,13 +148,24 @@ export async function resolveNumberForUpdate(
 }
 
 /**
- * 見積書から請求書を作るときの請求番号: 見積番号の数字部分をそのまま使う（EST-000700 → INV-000700）。
- * 見積番号の末尾に数字がない、またはその請求番号が既に使われている（同じ見積書から2枚目を作った等）ときは null
+ * 元の書類から作るときの番号: 元の番号の数字部分をそのまま使う
+ *   見積書 → 請求書・発注請書（EST-000700 → INV-000700 / ORD-000700）、請求書 → 納品書（INV-000700 → DN-000700）
+ * 接頭辞は番号設定の作る書類のもの。元の番号の末尾に数字がない、またはその番号が既に使われている
+ * （同じ書類から2枚目を作った等）ときは null
  */
-export async function invoiceNumberFromEstimate(db: Db, estimateNumber: string): Promise<string | null> {
-  const digits = /(\d+)$/.exec(estimateNumber)?.[1];
+export async function numberFromSource(db: Db, type: DocType, sourceNumber: string): Promise<string | null> {
+  const digits = /(\d+)$/.exec(sourceNumber)?.[1];
   if (!digits) return null;
-  const { prefix } = await getNumberConfig(db, 'invoice');
+  const { prefix } = await getNumberConfig(db, type);
   const number = `${prefix}${digits}`;
-  return (await findIdByNumber(db, 'invoice', number)) === null ? number : null;
+  return (await findIdByNumber(db, type, number)) === null ? number : null;
+}
+
+/** 新規作成時の番号: 指定があればそれ、なければ元の書類の番号を引き継ぎ、それもできなければ自動採番 */
+export async function resolveNumberFromSource(
+  db: Db, type: DocType, requested: unknown, sourceNumber: string | null | undefined,
+): Promise<string> {
+  const hasRequested = typeof requested === 'string' && requested.trim() !== '';
+  const inherited = !hasRequested && sourceNumber ? await numberFromSource(db, type, sourceNumber) : null;
+  return resolveNumber(db, type, inherited ?? requested);
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { resolveNumber } from '@/lib/numbering';
+import { resolveNumberFromSource } from '@/lib/numbering';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
@@ -35,7 +35,11 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const deliveryNumber = await resolveNumber(tx, 'delivery', body.deliveryNumber);
+    // 請求書から作成したときは、番号の指定がなければ請求番号の数字を引き継ぐ（INV-000700 → DN-000700）
+    const source = invoiceId
+      ? await tx.invoice.findUnique({ where: { id: Number(invoiceId) }, select: { invoiceNumber: true } })
+      : null;
+    const deliveryNumber = await resolveNumberFromSource(tx, 'delivery', body.deliveryNumber, source?.invoiceNumber);
 
     const items = buildLineItems(lineItems);
     const totals = calcTotals(items, discount);

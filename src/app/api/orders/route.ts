@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { resolveNumber } from '@/lib/numbering';
+import { resolveNumberFromSource } from '@/lib/numbering';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
@@ -35,7 +35,11 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    const orderNumber = await resolveNumber(tx, 'order', body.orderNumber);
+    // 見積書から作成したときは、番号の指定がなければ見積番号の数字を引き継ぐ（EST-000700 → ORD-000700）
+    const source = estimateId
+      ? await tx.estimate.findUnique({ where: { id: Number(estimateId) }, select: { estimateNumber: true } })
+      : null;
+    const orderNumber = await resolveNumberFromSource(tx, 'order', body.orderNumber, source?.estimateNumber);
 
     const items = buildLineItems(lineItems);
     const totals = calcTotals(items, discount);

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { nextNumber } from '@/lib/numbering';
+import { nextNumber, numberFromSource } from '@/lib/numbering';
 import { duplicateId, duplicateDeliveryNote } from '@/lib/duplicate';
 import DeliveryNoteForm, { DeliveryNoteFormInitial } from '@/components/delivery-notes/DeliveryNoteForm';
 
@@ -11,7 +11,7 @@ export default async function NewDeliveryNotePage({
   const { customerId, invoiceId, duplicate } = await searchParams;
   const dupId = duplicateId(duplicate);
 
-  const [customers, invoice, suggestedNumber, dup] = await Promise.all([
+  const [customers, invoice, autoNumber, dup] = await Promise.all([
     prisma.customer.findMany({ orderBy: { companyName: 'asc' } }),
     invoiceId
       ? prisma.invoice.findUnique({
@@ -40,6 +40,9 @@ export default async function NewDeliveryNotePage({
         customFields: invoice.customFields,
       }
     : undefined;
+
+  // 請求書から作成するときは、保存時に引き継ぐ番号を表示する（API 側と同じ規則）
+  const suggestedNumber = (!dup && invoice ? await numberFromSource(prisma, 'delivery', invoice.invoiceNumber) : null) ?? autoNumber;
 
   return (
     <div>

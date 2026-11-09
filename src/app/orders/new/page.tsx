@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { nextNumber } from '@/lib/numbering';
+import { nextNumber, numberFromSource } from '@/lib/numbering';
 import { duplicateId, duplicateOrder } from '@/lib/duplicate';
 import OrderForm, { OrderFormInitial } from '@/components/orders/OrderForm';
 
@@ -11,7 +11,7 @@ export default async function NewOrderPage({
   const { customerId, estimateId, duplicate } = await searchParams;
   const dupId = duplicateId(duplicate);
 
-  const [customers, estimate, suggestedNumber, dup] = await Promise.all([
+  const [customers, estimate, autoNumber, dup] = await Promise.all([
     prisma.customer.findMany({ orderBy: { companyName: 'asc' } }),
     estimateId
       ? prisma.estimate.findUnique({
@@ -41,6 +41,9 @@ export default async function NewOrderPage({
         customFields: estimate.customFields,
       }
     : undefined;
+
+  // 見積書から作成するときは、保存時に引き継ぐ番号を表示する（API 側と同じ規則）
+  const suggestedNumber = (!dup && estimate ? await numberFromSource(prisma, 'order', estimate.estimateNumber) : null) ?? autoNumber;
 
   return (
     <div>

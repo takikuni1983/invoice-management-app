@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { invoiceNumberFromEstimate, resolveNumber } from '@/lib/numbering';
+import { resolveNumberFromSource } from '@/lib/numbering';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildLineItems, calcTotals, buildCustomFields } from '@/lib/line-items';
 
@@ -46,13 +46,11 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    // 見積書から変換したときは、番号の指定がなければ見積番号の数字を引き継ぐ（使えなければ通常の自動採番）
-    let requestedNumber = body.invoiceNumber;
-    if (estimateId && !(typeof requestedNumber === 'string' && requestedNumber.trim())) {
-      const estimate = await tx.estimate.findUnique({ where: { id: Number(estimateId) }, select: { estimateNumber: true } });
-      if (estimate) requestedNumber = await invoiceNumberFromEstimate(tx, estimate.estimateNumber) ?? undefined;
-    }
-    const invoiceNumber = await resolveNumber(tx, 'invoice', requestedNumber);
+    // 見積書から変換したときは、番号の指定がなければ見積番号の数字を引き継ぐ（EST-000700 → INV-000700）
+    const estimate = estimateId
+      ? await tx.estimate.findUnique({ where: { id: Number(estimateId) }, select: { estimateNumber: true } })
+      : null;
+    const invoiceNumber = await resolveNumberFromSource(tx, 'invoice', body.invoiceNumber, estimate?.estimateNumber);
 
     const rate = Number(taxRate ?? 10);
     const items = buildLineItems(lineItems, rate);
