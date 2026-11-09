@@ -146,3 +146,15 @@ export async function resolveNumberForUpdate(
   if (!number) return undefined;
   return resolveNumber(db, type, number, selfId);
 }
+
+/**
+ * 見積書から請求書を作るときの請求番号: 見積番号の数字部分をそのまま使う（EST-000700 → INV-000700）。
+ * 見積番号の末尾に数字がない、またはその請求番号が既に使われている（同じ見積書から2枚目を作った等）ときは null
+ */
+export async function invoiceNumberFromEstimate(db: Db, estimateNumber: string): Promise<string | null> {
+  const digits = /(\d+)$/.exec(estimateNumber)?.[1];
+  if (!digits) return null;
+  const { prefix } = await getNumberConfig(db, 'invoice');
+  const number = `${prefix}${digits}`;
+  return (await findIdByNumber(db, 'invoice', number)) === null ? number : null;
+}
